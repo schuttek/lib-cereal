@@ -14,6 +14,12 @@ public class CerealInputStream extends InputStream {
 		this.inputStream = new DataInputStream(inputStream);
 	}
 
+	public CerealInputStream(DataInputStream inputStream) {
+		// we're creating a DataInputStream anyway, so if we receive one, no
+		// need to rewrap it.
+		this.inputStream = inputStream;
+	}
+
 	public <T> Optional<T> read(Class<T> cerealClass)
 			throws InstantiationException, IllegalAccessException, IOException {
 		try {
