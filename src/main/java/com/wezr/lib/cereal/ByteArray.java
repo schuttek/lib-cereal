@@ -8,7 +8,6 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 
-
 /**
  * This class essentially works like java.io.ByteBuffer. You can add data to the
  * front and back of the ByteArray, and remove bytes from the front. The main
@@ -60,8 +59,19 @@ public class ByteArray {
 	public ByteArray() {
 	}
 
+	/**
+	 * Copy constructor
+	 * 
+	 * Makes an exact, deep and independent copy of the given ByteArray.
+	 * 
+	 * @param ba
+	 */
 	public ByteArray(ByteArray ba) {
-
+		ba.coalesce();
+		byte[] copyBuffer = new byte[ba.front.length];
+		System.arraycopy(ba.front.array, 0, copyBuffer, 0, ba.front.array.length);
+		front = back = makeChunk(copyBuffer, 0, copyBuffer.length);
+		length = ba.length;
 	}
 
 	private Chunk makeChunk(byte[] b, int fromIdx, int length) {
@@ -249,7 +259,7 @@ public class ByteArray {
 		ba[0] = b;
 		addRawBytes(ba);
 	}
-	
+
 	public void addIfNotNull(Byte value) {
 		if (value != null) {
 			add(value);
@@ -261,6 +271,7 @@ public class ByteArray {
 		shortToBytes(s, b, 0);
 		addRawBytes(b);
 	}
+
 	public void addIfNotNull(Short value) {
 		if (value != null) {
 			add(value);
@@ -272,7 +283,7 @@ public class ByteArray {
 		intToBytes(i, b, 0);
 		addRawBytes(b);
 	}
-	
+
 	public void addIfNotNull(Integer value) {
 		if (value != null) {
 			add(value);
@@ -290,6 +301,7 @@ public class ByteArray {
 			add(value);
 		}
 	}
+
 	public void add(long l) {
 		byte[] b = new byte[8];
 		longToBytes(l, b, 0);
@@ -380,7 +392,7 @@ public class ByteArray {
 		b[0] = (byte) ((bool) ? 1 : 0);
 		addRawBytes(b);
 	}
-	
+
 	public void addIfNotNull(Boolean value) {
 		if (value != null) {
 			add(value);
@@ -476,7 +488,7 @@ public class ByteArray {
 		back = null;
 		length = 0;
 	}
-	
+
 	public void reset(byte[] value) {
 		reset();
 		addRawBytes(value);
