@@ -1,9 +1,6 @@
 package com.wezr.lib.cereal;
 
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Optional;
 
 public class CerealInputStream extends InputStream {
@@ -39,7 +36,7 @@ public class CerealInputStream extends InputStream {
 
 	@Override
 	public int read() throws IOException {
-		return inputStream.read();
+		throw new UnsupportedEncodingException();
 	}
 
 }
