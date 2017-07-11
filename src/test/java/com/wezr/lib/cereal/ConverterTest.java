@@ -1,12 +1,10 @@
 package com.wezr.lib.cereal;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Random;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import com.wezr.lib.cereal.ByteArray;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ConverterTest {
 

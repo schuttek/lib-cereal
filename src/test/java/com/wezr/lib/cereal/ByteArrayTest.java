@@ -1,9 +1,5 @@
 package com.wezr.lib.cereal;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -14,9 +10,12 @@ import java.nio.charset.CharsetEncoder;
 import java.util.LinkedList;
 import java.util.Random;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import com.wezr.lib.cereal.ByteArray;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ByteArrayTest {
 
@@ -269,12 +268,12 @@ public class ByteArrayTest {
 				case 0:
 					double dvalue = (double) t.getRight();
 					double dactual = ba.getDouble();
-					assertEquals(dvalue, dactual, 0.0);
+					assertEquals(dvalue, dactual);
 					break;
 				case 1:
 					float fvalue = (float) t.getRight();
 					float factual = ba.getFloat();
-					assertEquals(fvalue, factual, 0.0);
+					assertEquals(fvalue, factual);
 					break;
 				case 2:
 					long lvalue = (long) t.getRight();
