@@ -98,7 +98,7 @@ public class ByteArrayTest {
 	@Test
 	public void intTest() {
 		for (int t = 0; t < randIterations; t++) {
-			assertTrue(loadUnloadLong(rand.nextInt()));
+			assertTrue(loadUnloadInt(rand.nextInt()));
 		}
 		assertTrue(loadUnloadInt(1));
 		assertTrue(loadUnloadInt(0));
