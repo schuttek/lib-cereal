@@ -95,17 +95,17 @@ public class ByteArrayTest {
         return (d == ba.getInt()) ? true : false;
     }
 
-    @Test
-    public void intTest() {
-        for (int t = 0; t < randIterations; t++) {
-            assertTrue(loadUnloadLong(rand.nextInt()));
-        }
-        assertTrue(loadUnloadInt(1));
-        assertTrue(loadUnloadInt(0));
-        assertTrue(loadUnloadInt(-1));
-        assertTrue(loadUnloadInt(Integer.MAX_VALUE));
-        assertTrue(loadUnloadInt(Integer.MIN_VALUE));
-    }
+	@Test
+	public void intTest() {
+		for (int t = 0; t < randIterations; t++) {
+			assertTrue(loadUnloadInt(rand.nextInt()));
+		}
+		assertTrue(loadUnloadInt(1));
+		assertTrue(loadUnloadInt(0));
+		assertTrue(loadUnloadInt(-1));
+		assertTrue(loadUnloadInt(Integer.MAX_VALUE));
+		assertTrue(loadUnloadInt(Integer.MIN_VALUE));
+	}
 
     private boolean loadUnloadShort(short d) {
         ByteArray ba = new ByteArray();

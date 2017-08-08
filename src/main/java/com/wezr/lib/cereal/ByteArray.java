@@ -8,7 +8,6 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 
-
 /**
  * This class essentially works like java.io.ByteBuffer. You can add data to the
  * front and back of the ByteArray, and remove bytes from the front. The main
@@ -40,6 +39,7 @@ import java.nio.charset.CodingErrorAction;
 
 public class ByteArray {
 
+
     private class Chunk {
         protected byte[] array = null;
         protected int startIdx;
@@ -59,8 +59,19 @@ public class ByteArray {
     public ByteArray() {
     }
 
+    /**
+     * Copy constructor
+     * <p>
+     * Makes an exact, deep and independent copy of the given ByteArray.
+     *
+     * @param ba
+     */
     public ByteArray(ByteArray ba) {
-
+        ba.coalesce();
+        byte[] copyBuffer = new byte[ba.front.length];
+        System.arraycopy(ba.front.array, 0, copyBuffer, 0, ba.front.array.length);
+        front = back = makeChunk(copyBuffer, 0, copyBuffer.length);
+        length = ba.length;
     }
 
     private Chunk makeChunk(byte[] b, int fromIdx, int length) {

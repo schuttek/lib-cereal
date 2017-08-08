@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 
 public class CerealInputStream extends InputStream {
@@ -12,6 +13,13 @@ public class CerealInputStream extends InputStream {
 
     public CerealInputStream(InputStream inputStream) {
         this.inputStream = new DataInputStream(inputStream);
+    }
+
+
+    public CerealInputStream(DataInputStream inputStream) {
+        // we're creating a DataInputStream anyway, so if we receive one, no
+        // need to rewrap it.
+        this.inputStream = inputStream;
     }
 
     public <T> Optional<T> read(Class<T> cerealClass)
@@ -33,7 +41,7 @@ public class CerealInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        return inputStream.read();
+        throw new UnsupportedEncodingException();
     }
 
 }
