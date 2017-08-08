@@ -29,6 +29,10 @@ public class BitMap implements Cerealizable {
     }
 
     public void set(int index, boolean value) {
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException(
+                    "This bitmap has a size equals to " + size + " but you're trying to access the bit at index " + index + " which is out of range");
+        }
         byte b = map[index / 8];
         byte posBit = (byte) (1 << (index % 8));
         if (value) {
