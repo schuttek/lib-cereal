@@ -1,24 +1,25 @@
 package com.wezr.lib.cereal;
 
-import org.apache.commons.io.IOUtils;
-import org.junit.After;
-import org.junit.Test;
 
-import java.io.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import com.wezr.lib.model.Forecast;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 public class StreamTest {
 
@@ -27,7 +28,7 @@ public class StreamTest {
     public static final String testTempFilename = "./src/test/resources/test_temp.cereal.gz";
 
 
-    @After
+    @AfterEach
     public void cleanup() throws IOException {
         Files.delete(new File(testTempFilename).toPath());
     }
@@ -35,8 +36,10 @@ public class StreamTest {
     @Test
     public void ThreadedCerealInputStreamTest() throws Exception {
 
-        try (ThreadedCerealInputStream<Forecast> inputStream = new ThreadedCerealInputStream<Forecast>(new FileInputStream(testDataFilename), Forecast.class, ThreadedCerealInputStream.Compression.gzip)) {
-            try (CerealOutputStream outputStream = new CerealOutputStream(new GZIPOutputStream(new FileOutputStream(testTempFilename)))) {
+        try (ThreadedCerealInputStream<Forecast> inputStream = new ThreadedCerealInputStream<Forecast>(
+                new FileInputStream(testDataFilename), Forecast.class, ThreadedCerealInputStream.Compression.gzip)) {
+            try (CerealOutputStream outputStream = new CerealOutputStream(
+                    new GZIPOutputStream(new FileOutputStream(testTempFilename)))) {
 
                 Optional<Forecast> fo;
                 while (true) {
@@ -57,8 +60,10 @@ public class StreamTest {
     @Test
     public void ThreadedCerealOutputStreamTest() throws Exception {
 
-        try (ThreadedCerealOutputStream outputStream = new ThreadedCerealOutputStream(new FileOutputStream(testTempFilename), ThreadedCerealOutputStream.Compression.gzip)) {
-            try (CerealInputStream inputStream = new CerealInputStream(new GZIPInputStream(new FileInputStream(testDataFilename)))) {
+        try (ThreadedCerealOutputStream outputStream = new ThreadedCerealOutputStream(
+                new FileOutputStream(testTempFilename), ThreadedCerealOutputStream.Compression.gzip)) {
+            try (CerealInputStream inputStream = new CerealInputStream(
+                    new GZIPInputStream(new FileInputStream(testDataFilename)))) {
 
                 Optional<Forecast> fo;
                 while (true) {
@@ -78,8 +83,10 @@ public class StreamTest {
 
     @Test
     public void snappyTest() throws Exception {
-        try (ThreadedCerealInputStream<Forecast> inputStream = new ThreadedCerealInputStream<Forecast>(new FileInputStream(testDataFilename), Forecast.class, ThreadedCerealInputStream.Compression.gzip)) {
-            try (ThreadedCerealOutputStream outputStream = new ThreadedCerealOutputStream(new FileOutputStream(testTempFilename), ThreadedCerealOutputStream.Compression.snappy)) {
+        try (ThreadedCerealInputStream<Forecast> inputStream = new ThreadedCerealInputStream<Forecast>(
+                new FileInputStream(testDataFilename), Forecast.class, ThreadedCerealInputStream.Compression.gzip)) {
+            try (ThreadedCerealOutputStream outputStream = new ThreadedCerealOutputStream(
+                    new FileOutputStream(testTempFilename), ThreadedCerealOutputStream.Compression.snappy)) {
                 Optional<Forecast> fo;
                 while (true) {
                     fo = inputStream.read();
@@ -92,8 +99,11 @@ public class StreamTest {
             }
         }
 
-        try (ThreadedCerealInputStream<Forecast> gzipInputStream = new ThreadedCerealInputStream<Forecast>(new FileInputStream(testDataFilename), Forecast.class, ThreadedCerealInputStream.Compression.gzip)) {
-            try (ThreadedCerealInputStream<Forecast> snappyInputStream = new ThreadedCerealInputStream<Forecast>(new FileInputStream(testTempFilename), Forecast.class, ThreadedCerealInputStream.Compression.snappy)) {
+        try (ThreadedCerealInputStream<Forecast> gzipInputStream = new ThreadedCerealInputStream<Forecast>(
+                new FileInputStream(testDataFilename), Forecast.class, ThreadedCerealInputStream.Compression.gzip)) {
+            try (ThreadedCerealInputStream<Forecast> snappyInputStream = new ThreadedCerealInputStream<Forecast>(
+                    new FileInputStream(testTempFilename), Forecast.class,
+                    ThreadedCerealInputStream.Compression.snappy)) {
 
                 Optional<Forecast> gzfo, snfo;
                 while (true) {
@@ -116,9 +126,10 @@ public class StreamTest {
         List<Forecast> forecastList = new LinkedList<>();
 
 
-        try (ThreadedCerealInputStream<Forecast> gzipInputStream = new ThreadedCerealInputStream<Forecast>(new FileInputStream(testDataFilename), Forecast.class, ThreadedCerealInputStream.Compression.gzip)) {
+        try (ThreadedCerealInputStream<Forecast> gzipInputStream = new ThreadedCerealInputStream<Forecast>(
+                new FileInputStream(testDataFilename), Forecast.class, ThreadedCerealInputStream.Compression.gzip)) {
             while (true) {
-                Optional<Forecast> fo =  gzipInputStream.read();
+                Optional<Forecast> fo = gzipInputStream.read();
                 if (fo.isPresent()) {
                     forecastList.add(fo.get());
                 } else {
@@ -129,78 +140,94 @@ public class StreamTest {
 
 
         long start = System.nanoTime();
-        try (ThreadedCerealOutputStream outputStream = new ThreadedCerealOutputStream(new FileOutputStream(testTempFilename), ThreadedCerealOutputStream.Compression.gzip)) {
+        try (ThreadedCerealOutputStream outputStream = new ThreadedCerealOutputStream(
+                new FileOutputStream(testTempFilename), ThreadedCerealOutputStream.Compression.gzip)) {
             for (Forecast f : forecastList) {
                 outputStream.write(f);
             }
         }
         long duration = System.nanoTime() - start;
         long baseline = duration;
-        System.err.println(forecastList.size() + " objects in "+duration+" ns gzip write " + String.format("%.2f", 100.0 * ((double)duration) / ((double)baseline)) +"%");
+        System.err.println(forecastList.size() + " objects in " + duration + " ns gzip write " + String
+                .format("%.2f", 100.0 * ((double) duration) / ((double) baseline)) + "%");
         start = System.nanoTime();
-        try (ThreadedCerealInputStream<Forecast> gzipInputStream = new ThreadedCerealInputStream<Forecast>(new FileInputStream(testTempFilename), Forecast.class, ThreadedCerealInputStream.Compression.gzip)) {
+        try (ThreadedCerealInputStream<Forecast> gzipInputStream = new ThreadedCerealInputStream<Forecast>(
+                new FileInputStream(testTempFilename), Forecast.class, ThreadedCerealInputStream.Compression.gzip)) {
             for (Forecast f : forecastList) {
                 gzipInputStream.read();
             }
         }
         duration = System.nanoTime() - start;
-        System.err.println(forecastList.size() + " objects in "+duration+" ns gzip read "+ String.format("%.2f", 100.0 * ((double)duration) / ((double)baseline)) +"%");
+        System.err.println(forecastList.size() + " objects in " + duration + " ns gzip read " + String
+                .format("%.2f", 100.0 * ((double) duration) / ((double) baseline)) + "%");
 
         start = System.nanoTime();
-        try (ThreadedCerealOutputStream outputStream = new ThreadedCerealOutputStream(new FileOutputStream(testTempFilename), ThreadedCerealOutputStream.Compression.snappy)) {
+        try (ThreadedCerealOutputStream outputStream = new ThreadedCerealOutputStream(
+                new FileOutputStream(testTempFilename), ThreadedCerealOutputStream.Compression.snappy)) {
             for (Forecast f : forecastList) {
                 outputStream.write(f);
             }
         }
         duration = System.nanoTime() - start;
-        System.err.println(forecastList.size() + " objects in "+duration+" ns snappy write "+ String.format("%.2f", 100.0 * ((double)duration) / ((double)baseline)) +"%");
+        System.err.println(forecastList.size() + " objects in " + duration + " ns snappy write " + String
+                .format("%.2f", 100.0 * ((double) duration) / ((double) baseline)) + "%");
 
         start = System.nanoTime();
-        try (ThreadedCerealInputStream<Forecast> gzipInputStream = new ThreadedCerealInputStream<Forecast>(new FileInputStream(testTempFilename), Forecast.class, ThreadedCerealInputStream.Compression.snappy)) {
+        try (ThreadedCerealInputStream<Forecast> gzipInputStream = new ThreadedCerealInputStream<Forecast>(
+                new FileInputStream(testTempFilename), Forecast.class, ThreadedCerealInputStream.Compression.snappy)) {
             for (Forecast f : forecastList) {
                 gzipInputStream.read();
             }
         }
         duration = System.nanoTime() - start;
-        System.err.println(forecastList.size() + " objects in "+duration+" ns snappy read "+ String.format("%.2f", 100.0 * ((double)duration) / ((double)baseline)) +"%");
+        System.err.println(forecastList.size() + " objects in " + duration + " ns snappy read " + String
+                .format("%.2f", 100.0 * ((double) duration) / ((double) baseline)) + "%");
 
 
         start = System.nanoTime();
-        try (ThreadedCerealOutputStream outputStream = new ThreadedCerealOutputStream(new FileOutputStream(testTempFilename), ThreadedCerealOutputStream.Compression.none)) {
+        try (ThreadedCerealOutputStream outputStream = new ThreadedCerealOutputStream(
+                new FileOutputStream(testTempFilename), ThreadedCerealOutputStream.Compression.none)) {
             for (Forecast f : forecastList) {
                 outputStream.write(f);
             }
         }
         duration = System.nanoTime() - start;
-        System.err.println(forecastList.size() + " objects in "+duration+" ns none write "+ String.format("%.2f", 100.0 * ((double)duration) / ((double)baseline)) +"%");
+        System.err.println(forecastList.size() + " objects in " + duration + " ns none write " + String
+                .format("%.2f", 100.0 * ((double) duration) / ((double) baseline)) + "%");
 
         start = System.nanoTime();
-        try (ThreadedCerealInputStream<Forecast> gzipInputStream = new ThreadedCerealInputStream<Forecast>(new FileInputStream(testTempFilename), Forecast.class, ThreadedCerealInputStream.Compression.none)) {
+        try (ThreadedCerealInputStream<Forecast> gzipInputStream = new ThreadedCerealInputStream<Forecast>(
+                new FileInputStream(testTempFilename), Forecast.class, ThreadedCerealInputStream.Compression.none)) {
             for (Forecast f : forecastList) {
                 gzipInputStream.read();
             }
         }
         duration = System.nanoTime() - start;
-        System.err.println(forecastList.size() + " objects in "+duration+" ns none read "+ String.format("%.2f", 100.0 * ((double)duration) / ((double)baseline)) +"%");
+        System.err.println(forecastList.size() + " objects in " + duration + " ns none read " + String
+                .format("%.2f", 100.0 * ((double) duration) / ((double) baseline)) + "%");
 
 
         start = System.nanoTime();
-        try (CerealOutputStream outputStream = new CerealOutputStream(new GZIPOutputStream(new FileOutputStream(testTempFilename)))) {
+        try (CerealOutputStream outputStream = new CerealOutputStream(
+                new GZIPOutputStream(new FileOutputStream(testTempFilename)))) {
             for (Forecast f : forecastList) {
                 outputStream.write(f);
             }
         }
         duration = System.nanoTime() - start;
-        System.err.println(forecastList.size() + " objects in "+duration+" ns classic gzip write "+ String.format("%.2f", 100.0 * ((double)duration) / ((double)baseline)) +"%");
+        System.err.println(forecastList.size() + " objects in " + duration + " ns classic gzip write " + String
+                .format("%.2f", 100.0 * ((double) duration) / ((double) baseline)) + "%");
 
         start = System.nanoTime();
-        try (CerealInputStream inputStream = new CerealInputStream(new GZIPInputStream(new FileInputStream(testTempFilename)))) {
+        try (CerealInputStream inputStream = new CerealInputStream(
+                new GZIPInputStream(new FileInputStream(testTempFilename)))) {
             for (Forecast f : forecastList) {
                 inputStream.read(Forecast.class);
             }
         }
         duration = System.nanoTime() - start;
-        System.err.println(forecastList.size() + " objects in "+duration+" ns classic gzip read "+ String.format("%.2f", 100.0 * ((double)duration) / ((double)baseline)) +"%");
+        System.err.println(forecastList.size() + " objects in " + duration + " ns classic gzip read " + String
+                .format("%.2f", 100.0 * ((double) duration) / ((double) baseline)) + "%");
 
     }
 
@@ -210,8 +237,6 @@ public class StreamTest {
         messageDigest.update(Files.readAllBytes(new File(filename).toPath()));
         return messageDigest.digest();
     }
-
-
 
 
 }

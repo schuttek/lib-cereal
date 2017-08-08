@@ -1,16 +1,15 @@
 package com.wezr.lib.cereal;
 
 import org.apache.commons.io.IOUtils;
-import org.iq80.snappy.SnappyFramedInputStream;
 import org.iq80.snappy.SnappyFramedOutputStream;
 
-import java.io.*;
-import java.util.Optional;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -32,7 +31,9 @@ public class ThreadedCerealOutputStream implements AutoCloseable {
     private boolean keepRunning = true;
 
     public enum Compression {
-        gzip, snappy, none;
+        gzip,
+        snappy,
+        none;
     }
 
     private final int bufferSize;

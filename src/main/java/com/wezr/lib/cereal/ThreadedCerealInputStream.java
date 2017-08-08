@@ -1,14 +1,16 @@
 package com.wezr.lib.cereal;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.iq80.snappy.SnappyFramedInputStream;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
@@ -16,7 +18,7 @@ import java.util.zip.GZIPInputStream;
 /**
  * This is perhaps a faster way to read Cereal data. It decompresses data from the original input stream in
  * one thread, decerealizes objects in another, leaving your thread to do the actual data processing.
- *
+ * <p>
  * The main caveat is that you can only read files with one type of Cerealizeable object,
  * since decerealization is done ahead of time.
  *
@@ -38,7 +40,9 @@ public class ThreadedCerealInputStream<T> implements AutoCloseable {
     private Thread decerealizerThread;
 
     public enum Compression {
-        gzip, snappy, none;
+        gzip,
+        snappy,
+        none;
     }
 
     private final int bufferSize;
