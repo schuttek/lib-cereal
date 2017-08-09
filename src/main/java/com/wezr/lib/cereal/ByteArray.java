@@ -40,18 +40,9 @@ import java.nio.charset.CodingErrorAction;
 public class ByteArray {
 
 
-    private class Chunk {
-        protected byte[] array = null;
-        protected int startIdx;
-        protected int length;
-        protected Chunk next = null;
-    }
-
     private int length = 0;
-
     private Chunk front = null;
     private Chunk back = null;
-
     public ByteArray(byte[] b) {
         addRawBytes(b);
     }
@@ -72,6 +63,76 @@ public class ByteArray {
         System.arraycopy(ba.front.array, 0, copyBuffer, 0, ba.front.array.length);
         front = back = makeChunk(copyBuffer, 0, copyBuffer.length);
         length = ba.length;
+    }
+
+    public static short bytesToShort(byte[] array, int offset) {
+        short n = 0;
+        n ^= array[offset] & 0xFF;
+        n <<= 8;
+        n ^= array[offset + 1] & 0xFF;
+        return n;
+    }
+
+    public static void shortToBytes(short val, byte[] byteBuff, int offset) {
+        byteBuff[offset + 1] = (byte) val;
+        val >>= 8;
+        byteBuff[offset] = (byte) val;
+    }
+
+    public static long bytesToLong(byte[] array, int offset) {
+        long l = 0;
+        for (int i = offset; i < offset + 8; i++) {
+            l <<= 8;
+            l ^= array[i] & 0xFF;
+        }
+        return l;
+    }
+
+    public static void longToBytes(long l, byte[] bb, int offset) {
+        for (int i = 7; i > 0; i--) {
+            bb[i] = (byte) l;
+            l >>>= 8;
+        }
+        bb[0] = (byte) l;
+    }
+
+    public static int bytesToInt(byte[] array, int offset) {
+        return array[offset] << 24 | (array[offset + 1] & 0xFF) << 16 | (array[offset + 2] & 0xFF) << 8
+                | (array[offset + 3] & 0xFF);
+    }
+
+    public static void intToBytes(int i, byte[] byteBuff, int offset) {
+        for (int t = 0; t < 4; t++) {
+            byteBuff[offset + t] = (byte) (i >> (4 - (t + 1)) * 8);
+        }
+    }
+
+    /**
+     * This implementation uses Double.doubleToLongBits instead of
+     * Double.doubleToRawLongBits, which translates the 0x7ff8000000000100L NaN
+     * value to the 0x7ff8000000000000L NaN Value.
+     * <p>
+     * Honestly, I have no idea what that might imply... but Hadoop uses this
+     * version, and that's good enough for me.
+     *
+     * @param d
+     * @param bb
+     * @param offset
+     */
+    public static void doubleToBytes(double d, byte[] bb, int offset) {
+        longToBytes(Double.doubleToLongBits(d), bb, offset);
+    }
+
+    public static double bytesToDouble(byte[] array, int offset) {
+        return Double.longBitsToDouble(bytesToLong(array, offset));
+    }
+
+    public static void floatToBytes(float f, byte[] bb, int offset) {
+        intToBytes(Float.floatToIntBits(f), bb, offset);
+    }
+
+    public static float bytesToFloat(byte[] array, int offset) {
+        return Float.intBitsToFloat(bytesToInt(array, offset));
     }
 
     private Chunk makeChunk(byte[] b, int fromIdx, int length) {
@@ -401,76 +462,6 @@ public class ByteArray {
         }
     }
 
-    public static short bytesToShort(byte[] array, int offset) {
-        short n = 0;
-        n ^= array[offset] & 0xFF;
-        n <<= 8;
-        n ^= array[offset + 1] & 0xFF;
-        return n;
-    }
-
-    public static void shortToBytes(short val, byte[] byteBuff, int offset) {
-        byteBuff[offset + 1] = (byte) val;
-        val >>= 8;
-        byteBuff[offset] = (byte) val;
-    }
-
-    public static long bytesToLong(byte[] array, int offset) {
-        long l = 0;
-        for (int i = offset; i < offset + 8; i++) {
-            l <<= 8;
-            l ^= array[i] & 0xFF;
-        }
-        return l;
-    }
-
-    public static void longToBytes(long l, byte[] bb, int offset) {
-        for (int i = 7; i > 0; i--) {
-            bb[i] = (byte) l;
-            l >>>= 8;
-        }
-        bb[0] = (byte) l;
-    }
-
-    public static int bytesToInt(byte[] array, int offset) {
-        return array[offset] << 24 | (array[offset + 1] & 0xFF) << 16 | (array[offset + 2] & 0xFF) << 8
-                | (array[offset + 3] & 0xFF);
-    }
-
-    public static void intToBytes(int i, byte[] byteBuff, int offset) {
-        for (int t = 0; t < 4; t++) {
-            byteBuff[offset + t] = (byte) (i >> (4 - (t + 1)) * 8);
-        }
-    }
-
-    /**
-     * This implementation uses Double.doubleToLongBits instead of
-     * Double.doubleToRawLongBits, which translates the 0x7ff8000000000100L NaN
-     * value to the 0x7ff8000000000000L NaN Value.
-     * <p>
-     * Honestly, I have no idea what that might imply... but Hadoop uses this
-     * version, and that's good enough for me.
-     *
-     * @param d
-     * @param bb
-     * @param offset
-     */
-    public static void doubleToBytes(double d, byte[] bb, int offset) {
-        longToBytes(Double.doubleToLongBits(d), bb, offset);
-    }
-
-    public static double bytesToDouble(byte[] array, int offset) {
-        return Double.longBitsToDouble(bytesToLong(array, offset));
-    }
-
-    public static void floatToBytes(float f, byte[] bb, int offset) {
-        intToBytes(Float.floatToIntBits(f), bb, offset);
-    }
-
-    public static float bytesToFloat(byte[] array, int offset) {
-        return Float.intBitsToFloat(bytesToInt(array, offset));
-    }
-
     public byte[] getByteArray() {
         int len = getInt();
         if (len == -1) {
@@ -496,6 +487,13 @@ public class ByteArray {
     public void reset(byte[] value) {
         reset();
         addRawBytes(value);
+    }
+
+    private class Chunk {
+        protected byte[] array = null;
+        protected int startIdx;
+        protected int length;
+        protected Chunk next = null;
     }
 
 }

@@ -19,9 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ByteArrayTest {
 
-    Random rand = new Random();
-
     private static final int randIterations = 20;
+    Random rand = new Random();
 
     private boolean loadUnloadDouble(double d) {
         ByteArray ba = new ByteArray();

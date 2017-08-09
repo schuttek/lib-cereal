@@ -1,7 +1,7 @@
 package com.wezr.lib.cereal;
 
 import org.apache.commons.io.IOUtils;
-import org.iq80.snappy.SnappyFramedInputStream;
+import org.xerial.snappy.SnappyFramedInputStream;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -25,32 +25,22 @@ import java.util.zip.GZIPInputStream;
  * @param <T>
  */
 public class ThreadedCerealInputStream<T> implements AutoCloseable {
+    private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024; // 1MB
+    private static final int DEFAULT_CEREAL_QUEUE_SIZE = 512;
+    private final InputStream originalInputStream;
+    private final ArrayBlockingQueue<T> cerealQueue = new ArrayBlockingQueue<T>(DEFAULT_CEREAL_QUEUE_SIZE);
+    private final Class<T> cerealClass;
+    private final int bufferSize;
+    private final Compression compression;
     private InputStream readerInputStream;
     private PipedOutputStream decompressorPipedOutputStream;
     private PipedInputStream decerealizerInputStream;
-    private final InputStream originalInputStream;
     private CerealInputStream cerealInputStream;
-
-    private final ArrayBlockingQueue<T> cerealQueue = new ArrayBlockingQueue<T>(DEFAULT_CEREAL_QUEUE_SIZE);
     private boolean eofReached = false;
     private ExecutorService executor;
-    private final Class<T> cerealClass;
     private Exception exception = null;
     private Thread decompresserThread;
     private Thread decerealizerThread;
-
-    public enum Compression {
-        gzip,
-        snappy,
-        none;
-    }
-
-    private final int bufferSize;
-    private final Compression compression;
-
-    private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024; // 1MB
-    private static final int DEFAULT_CEREAL_QUEUE_SIZE = 512;
-
     public ThreadedCerealInputStream(InputStream inputStream, Class<T> cerealClass) {
         this.bufferSize = DEFAULT_BUFFER_SIZE;
         this.compression = Compression.none;
@@ -175,5 +165,11 @@ public class ThreadedCerealInputStream<T> implements AutoCloseable {
                 }
             }
         }
+    }
+
+    public enum Compression {
+        gzip,
+        snappy,
+        none;
     }
 }
