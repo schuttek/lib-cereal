@@ -1,7 +1,7 @@
 package com.wezr.lib.cereal;
 
 import org.apache.commons.io.IOUtils;
-import org.iq80.snappy.SnappyFramedOutputStream;
+import org.xerial.snappy.SnappyFramedOutputStream;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -18,29 +18,20 @@ import java.util.zip.GZIPOutputStream;
  */
 
 public class ThreadedCerealOutputStream implements AutoCloseable {
+    private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024; // 1MB
+    private static final int DEFAULT_QUEUE_SIZE = 512;
+    private final int bufferSize;
+    private final Compression compression;
     private OutputStream writerOutputStream;
     private PipedInputStream compressorPipedInputStream;
     private PipedOutputStream cerealizerOutputStream;
     private CerealOutputStream cerealOutputStream;
     private OutputStream originalOutputStream;
-
     private ArrayBlockingQueue<Cerealizable> cerealQueue = new ArrayBlockingQueue<>(DEFAULT_QUEUE_SIZE);
     private Exception exception = null;
     private Thread compresserThread;
     private Thread cerealizerThread;
     private boolean keepRunning = true;
-
-    public enum Compression {
-        gzip,
-        snappy,
-        none;
-    }
-
-    private final int bufferSize;
-    private final Compression compression;
-
-    private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024; // 1MB
-    private static final int DEFAULT_QUEUE_SIZE = 512;
 
     public ThreadedCerealOutputStream(OutputStream outputStream) {
         this.bufferSize = DEFAULT_BUFFER_SIZE;
@@ -150,5 +141,11 @@ public class ThreadedCerealOutputStream implements AutoCloseable {
         } else {
             cerealQueue.put(object);
         }
+    }
+
+    public enum Compression {
+        gzip,
+        snappy,
+        none;
     }
 }
