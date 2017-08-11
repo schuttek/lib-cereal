@@ -136,6 +136,12 @@ public class ByteArray {
         return Float.intBitsToFloat(bytesToInt(array, offset));
     }
 
+    public static ByteArray cerealize(Cerealizable cerealizable) {
+        ByteArray ba = new ByteArray();
+        cerealizable.cerealizeTo(ba);
+        return ba;
+    }
+
     private Chunk makeChunk(byte[] b, int fromIdx, int length) {
         if (fromIdx + length > b.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -490,16 +496,17 @@ public class ByteArray {
         addRawBytes(value);
     }
 
-    public <T> T uncerealize(Class<? extends Cerealizable> clazz) throws IllegalAccessException, InstantiationException {
-        Cerealizable cerealizable = clazz.newInstance();
+    public <T> T uncerealize(Class<? extends Cerealizable> clazz) {
+        Cerealizable cerealizable = null;
+        try {
+            cerealizable = clazz.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException(e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException(e);
+        }
         cerealizable.uncerealizeFrom(this);
         return (T) cerealizable;
-    }
-
-    public static ByteArray cerealize(Cerealizable cerealizable) {
-        ByteArray ba = new ByteArray();
-        cerealizable.cerealizeTo(ba);
-        return ba;
     }
 
     private class Chunk {
