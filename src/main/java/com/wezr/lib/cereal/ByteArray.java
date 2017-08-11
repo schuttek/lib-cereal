@@ -43,6 +43,7 @@ public class ByteArray {
     private int length = 0;
     private Chunk front = null;
     private Chunk back = null;
+
     public ByteArray(byte[] b) {
         addRawBytes(b);
     }
@@ -487,6 +488,18 @@ public class ByteArray {
     public void reset(byte[] value) {
         reset();
         addRawBytes(value);
+    }
+
+    public <T> T uncerealize(Class<? extends Cerealizable> clazz) throws IllegalAccessException, InstantiationException {
+        Cerealizable cerealizable = clazz.newInstance();
+        cerealizable.uncerealizeFrom(this);
+        return (T) cerealizable;
+    }
+
+    public static ByteArray cerealize(Cerealizable cerealizable) {
+        ByteArray ba = new ByteArray();
+        cerealizable.cerealizeTo(ba);
+        return ba;
     }
 
     private class Chunk {
