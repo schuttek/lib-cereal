@@ -43,6 +43,7 @@ public class ByteArray {
     private int length = 0;
     private Chunk front = null;
     private Chunk back = null;
+
     public ByteArray(byte[] b) {
         addRawBytes(b);
     }
@@ -133,6 +134,12 @@ public class ByteArray {
 
     public static float bytesToFloat(byte[] array, int offset) {
         return Float.intBitsToFloat(bytesToInt(array, offset));
+    }
+
+    public static ByteArray cerealize(Cerealizable cerealizable) {
+        ByteArray ba = new ByteArray();
+        cerealizable.cerealizeTo(ba);
+        return ba;
     }
 
     private Chunk makeChunk(byte[] b, int fromIdx, int length) {
@@ -487,6 +494,19 @@ public class ByteArray {
     public void reset(byte[] value) {
         reset();
         addRawBytes(value);
+    }
+
+    public <T> T uncerealize(Class<? extends Cerealizable> clazz) {
+        Cerealizable cerealizable = null;
+        try {
+            cerealizable = clazz.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException(e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException(e);
+        }
+        cerealizable.uncerealizeFrom(this);
+        return (T) cerealizable;
     }
 
     private class Chunk {
