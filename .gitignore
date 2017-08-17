@@ -10,3 +10,4 @@ rest-demo*.log
 **/.DS_Store
 .factorypath
 /.apt_generated/
+out/
