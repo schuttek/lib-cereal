@@ -66,6 +66,20 @@ public class ByteArray {
         length = ba.length;
     }
 
+    public ByteArray(ByteBuffer byteBuffer) {
+        byte[] bytes = new byte[byteBuffer.remaining()];
+        byteBuffer.get(bytes);
+        addRawBytes(bytes);
+    }
+
+    public static ByteArray wrap(byte[] bytes) {
+        return new ByteArray(bytes);
+    }
+
+    public static ByteArray wrap(ByteBuffer byteBuffer) {
+        return new ByteArray(byteBuffer);
+    }
+
     public static short bytesToShort(byte[] array, int offset) {
         short n = 0;
         n ^= array[offset] & 0xFF;
@@ -496,13 +510,12 @@ public class ByteArray {
         addRawBytes(value);
     }
 
-    public <T> T uncerealize(Class<? extends Cerealizable> clazz) {
+    @SuppressWarnings("unchecked")
+    public <T extends Cerealizable> T uncerealize(Class<T> clazz) {
         Cerealizable cerealizable = null;
         try {
             cerealizable = clazz.newInstance();
-        } catch (InstantiationException e) {
-            throw new IllegalArgumentException(e);
-        } catch (IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
             throw new IllegalArgumentException(e);
         }
         cerealizable.uncerealizeFrom(this);
@@ -510,10 +523,10 @@ public class ByteArray {
     }
 
     private class Chunk {
-        protected byte[] array = null;
-        protected int startIdx;
-        protected int length;
-        protected Chunk next = null;
+        byte[] array = null;
+        int startIdx;
+        int length;
+        Chunk next = null;
     }
 
 }
