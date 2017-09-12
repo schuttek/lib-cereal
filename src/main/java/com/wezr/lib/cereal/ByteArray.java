@@ -511,7 +511,7 @@ public class ByteArray {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Cerealizable> T uncerealize(Class<T> clazz) {
+    public <T extends Cerealizable> T uncerealize(Class<? extends Cerealizable> clazz) {
         Cerealizable cerealizable = null;
         try {
             cerealizable = clazz.newInstance();
