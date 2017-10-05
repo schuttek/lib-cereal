@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.util.UUID;
 
 /**
  * This class essentially works like java.io.ByteBuffer. You can add data to the
@@ -302,6 +303,12 @@ public class ByteArray {
         return true;
     }
 
+    public UUID getUUID() {
+        long most = getLong();
+        long least = getLong();
+        return new UUID(most, least);
+    }
+
     public void addByteArray(byte[] b) {
         if (b == null) {
             add(-1);
@@ -480,6 +487,17 @@ public class ByteArray {
     public void addIfNotNull(Boolean value) {
         if (value != null) {
             add(value);
+        }
+    }
+
+    public void add(UUID uuid) {
+        add(uuid.getMostSignificantBits());
+        add(uuid.getLeastSignificantBits());
+    }
+
+    public void addIfNotNull(UUID uuid) {
+        if (uuid != null) {
+            add(uuid);
         }
     }
 
