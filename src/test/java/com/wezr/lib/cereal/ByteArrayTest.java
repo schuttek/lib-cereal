@@ -11,6 +11,7 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -199,6 +200,8 @@ public class ByteArrayTest {
         }
     }
 
+
+
     @Test
     public void complexTest() {
         final int runTimes = 50;
@@ -208,7 +211,7 @@ public class ByteArrayTest {
             ByteArray ba = new ByteArray();
             LinkedList<Tuple<Integer, Object>> list = new LinkedList<>();
             for (int e = 0; e < elements; e++) {
-                int type = RandUtils.nextInt(9);
+                int type = RandUtils.nextInt(10);
                 switch (type) {
                     case 0:
                         double dvalue = rand.nextDouble();
@@ -254,6 +257,11 @@ public class ByteArrayTest {
                         byte[] avalue = RandUtils.nextByteArray(RandUtils.nextInt(1000, 2000));
                         ba.addByteArray(avalue);
                         list.add(new Tuple<Integer, Object>(type, avalue));
+                        break;
+                    case 9:
+                        UUID uvalue = UUIDType5.nameUUIDFromNamespaceAndString(UUIDType5.NAMESPACE_OID,RandUtils.nextUTF8String(1000, 2000));
+                        ba.add(uvalue);
+                        list.add(new Tuple<Integer, Object>(type, uvalue));
                         break;
                 }
             }
@@ -308,6 +316,11 @@ public class ByteArrayTest {
                         byte[] avalue = (byte[]) t.getRight();
                         byte[] aactual = ba.getByteArray();
                         assertArrayEquals(avalue, aactual);
+                        break;
+                    case 9:
+                        UUID uvalue = (UUID) t.getRight();
+                        UUID uactual = ba.getUUID();
+                        assertEquals(uvalue, uactual);
                         break;
                 }
             }
