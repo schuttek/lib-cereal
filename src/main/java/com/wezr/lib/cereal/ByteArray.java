@@ -38,7 +38,7 @@ import java.util.UUID;
  * @author kai
  */
 
-public class ByteArray {
+public class ByteArray implements Cerealizable{
 
 
     private int length = 0;
@@ -538,6 +538,17 @@ public class ByteArray {
         }
         cerealizable.uncerealizeFrom(this);
         return (T) cerealizable;
+    }
+
+    @Override
+    public void cerealizeTo(final ByteArray ba) {
+        coalesce();
+        ba.addByteArray(front.array);
+    }
+
+    @Override
+    public void uncerealizeFrom(final ByteArray ba) {
+        this.reset(ba.getByteArray());
     }
 
     private class Chunk {
