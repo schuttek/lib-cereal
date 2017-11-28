@@ -105,7 +105,7 @@ public class ByteArray implements Cerealizable {
     }
 
     public static void longToBytes(long l, byte[] bb, int offset) {
-        for (int i = 7 + offset; i > 0; i--) {
+        for (int i = 7 + offset; i > offset; i--) {
             bb[i] = (byte) l;
             l >>>= 8;
         }
