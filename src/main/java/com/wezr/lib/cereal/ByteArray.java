@@ -109,7 +109,7 @@ public class ByteArray implements Cerealizable {
             bb[i] = (byte) l;
             l >>>= 8;
         }
-        bb[0] = (byte) l;
+        bb[offset] = (byte) l;
     }
 
     public static int bytesToInt(byte[] array, int offset) {
