@@ -38,7 +38,7 @@ import java.util.UUID;
  * @author kai
  */
 
-public class ByteArray implements Cerealizable{
+public class ByteArray implements Cerealizable {
 
 
     private int length = 0;
@@ -105,7 +105,7 @@ public class ByteArray implements Cerealizable{
     }
 
     public static void longToBytes(long l, byte[] bb, int offset) {
-        for (int i = 7; i > 0; i--) {
+        for (int i = 7 + offset; i > 0; i--) {
             bb[i] = (byte) l;
             l >>>= 8;
         }
