@@ -51,7 +51,7 @@ public class CerealBytes implements Cerealizable {
         return Arrays.hashCode(bowl);
     }
 
-    private byte[] getBytes() {
+    public byte[] getBytes() {
         return bowl;
     }
 }
