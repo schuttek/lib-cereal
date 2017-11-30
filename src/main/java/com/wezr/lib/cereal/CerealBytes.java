@@ -54,4 +54,14 @@ public class CerealBytes implements Cerealizable {
     public byte[] getBytes() {
         return bowl;
     }
+    public byte[] getValue() {
+        return bowl;
+    }
+
+    @Override
+    public String toString() {
+        return "CerealBytes{" +
+                "bowl=" + Arrays.toString(bowl) +
+                '}';
+    }
 }

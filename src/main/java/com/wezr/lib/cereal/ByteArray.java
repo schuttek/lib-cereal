@@ -237,7 +237,7 @@ public class ByteArray implements Cerealizable {
             return new byte[0];
         }
         if (numBytes > this.length) {
-            throw new ArrayIndexOutOfBoundsException();
+            throw new ArrayIndexOutOfBoundsException("Tried to remove "+numBytes+", while length is "+this.length);
         }
         coalesce();
         byte[] ret = new byte[numBytes];
@@ -538,6 +538,10 @@ public class ByteArray implements Cerealizable {
         }
         cerealizable.uncerealizeFrom(this);
         return (T) cerealizable;
+    }
+
+    public static <T extends Cerealizable> T uncerealize(byte[] bytes, Class<? extends Cerealizable> clazz) {
+        return new ByteArray(bytes).uncerealize(clazz);
     }
 
     @Override
