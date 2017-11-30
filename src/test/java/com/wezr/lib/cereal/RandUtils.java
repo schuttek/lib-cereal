@@ -17,6 +17,14 @@ public class RandUtils {
         return rand(false).nextLong();
     }
 
+    public static double nextDouble() {
+        return rand(false).nextDouble();
+    }
+
+    public static float nextFloat() {
+        return rand(false).nextFloat();
+    }
+
     public static int nextInt() {
         return rand(false).nextInt();
     }
