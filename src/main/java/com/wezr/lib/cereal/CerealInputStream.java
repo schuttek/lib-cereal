@@ -47,7 +47,8 @@ public class CerealInputStream extends InputStream {
 
     @Override
     public long skip(final long n) throws IOException {
-        return super.skip(n);
+        long skipped = super.skip(n);
+        position += skipped;
     }
 
     @Override
