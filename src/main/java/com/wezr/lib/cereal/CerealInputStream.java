@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public class CerealInputStream extends InputStream {
 
+    private static final int OBJECT_BUFFER_SIZE = 4; // 4 bytes for an int.
     private final DataInputStream inputStream;
     private long position = 0;
 
@@ -25,13 +26,13 @@ public class CerealInputStream extends InputStream {
 
     public <T> Optional<T> read(Class<T> cerealClass)
             throws InstantiationException, IllegalAccessException, IOException {
-        byte[] byteLengthBuffer = new byte[4];
+        byte[] byteLengthBuffer = new byte[OBJECT_BUFFER_SIZE];
         try {
             inputStream.readFully(byteLengthBuffer);
             int length = ByteArray.bytesToInt(byteLengthBuffer, 0);
             byte[] cerealizedObjectBuffer = new byte[length];
             inputStream.readFully(cerealizedObjectBuffer);
-            position += length + 4;
+            position += length + OBJECT_BUFFER_SIZE;
             ByteArray ba = new ByteArray(cerealizedObjectBuffer);
             T cerealObject = cerealClass.newInstance();
             ((Cerealizable) cerealObject).uncerealizeFrom(ba);

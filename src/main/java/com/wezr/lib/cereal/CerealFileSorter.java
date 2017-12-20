@@ -51,7 +51,6 @@ public class CerealFileSorter<T extends Cerealizable> {
      * Sort objects from the input file and write them, in order, to output file.
      * <p>
      * Input and output are allowed to be the same file, in which case the input file will be overwritten.
-     *
      */
     public void sort(Path input, Path output) throws IOException, InstantiationException, IllegalAccessException {
         List<File> tempFiles = new LinkedList<>();
@@ -62,17 +61,21 @@ public class CerealFileSorter<T extends Cerealizable> {
             List<T> block;
             do {
                 block = readBlock(cerealInputStream);
-                block.sort(comparator);
 
-                File tempFile = buildNextTempFile(input);
-                tempFiles.add(tempFile);
+                if (!block.isEmpty()) {
+                    block.sort(comparator);
 
-                try (CerealOutputStream cerealOutputStream = new CerealOutputStream(new FileOutputStream(tempFile))) {
-                    for (T cereal : block) {
-                        cerealOutputStream.write(cereal);
+                    File tempFile = buildNextTempFile(input);
+                    tempFiles.add(tempFile);
+
+                    try (CerealOutputStream cerealOutputStream = new CerealOutputStream(
+                            new FileOutputStream(tempFile))) {
+                        for (T cereal : block) {
+                            cerealOutputStream.write(cereal);
+                        }
                     }
                 }
-            } while (block.size() > 0);
+            } while (!block.isEmpty());
         }
 
         // read from all the tempfiles, and output the highest priority element to the outputfile;
@@ -121,10 +124,14 @@ public class CerealFileSorter<T extends Cerealizable> {
 
     private List<CerealInputStream> openTempFiles(final List<File> tempFiles) throws FileNotFoundException {
         List<CerealInputStream> inputStreams = new LinkedList<>();
-        for (File tempFile : tempFiles) {
-            inputStreams.add(new CerealInputStream(new FileInputStream(tempFile)));
+        try {
+            for (File tempFile : tempFiles) {
+                inputStreams.add(new CerealInputStream(new FileInputStream(tempFile)));
+            }
+            return inputStreams;
+        } finally {
+            closeTempFiles(inputStreams);
         }
-        return inputStreams;
     }
 
     private PriorityQueue<ImmutablePair<T, CerealInputStream>> buildPriorityQueues(final List<CerealInputStream> tempFiles) throws IllegalAccessException, IOException, InstantiationException {
