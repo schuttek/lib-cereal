@@ -38,7 +38,7 @@ import java.util.UUID;
  * @author kai
  */
 
-public class ByteArray {
+public class ByteArray implements Cerealizable {
 
 
     private int length = 0;
@@ -105,11 +105,11 @@ public class ByteArray {
     }
 
     public static void longToBytes(long l, byte[] bb, int offset) {
-        for (int i = 7; i > 0; i--) {
+        for (int i = 7 + offset; i > offset; i--) {
             bb[i] = (byte) l;
             l >>>= 8;
         }
-        bb[0] = (byte) l;
+        bb[offset] = (byte) l;
     }
 
     public static int bytesToInt(byte[] array, int offset) {
@@ -237,7 +237,7 @@ public class ByteArray {
             return new byte[0];
         }
         if (numBytes > this.length) {
-            throw new ArrayIndexOutOfBoundsException();
+            throw new ArrayIndexOutOfBoundsException("Tried to remove "+numBytes+", while length is "+this.length);
         }
         coalesce();
         byte[] ret = new byte[numBytes];
@@ -538,6 +538,21 @@ public class ByteArray {
         }
         cerealizable.uncerealizeFrom(this);
         return (T) cerealizable;
+    }
+
+    public static <T extends Cerealizable> T uncerealize(byte[] bytes, Class<? extends Cerealizable> clazz) {
+        return new ByteArray(bytes).uncerealize(clazz);
+    }
+
+    @Override
+    public void cerealizeTo(final ByteArray ba) {
+        coalesce();
+        ba.addByteArray(front.array);
+    }
+
+    @Override
+    public void uncerealizeFrom(final ByteArray ba) {
+        this.reset(ba.getByteArray());
     }
 
     private class Chunk {
