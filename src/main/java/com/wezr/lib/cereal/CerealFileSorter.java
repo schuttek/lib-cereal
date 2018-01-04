@@ -68,8 +68,8 @@ public class CerealFileSorter<T extends Cerealizable> {
                     File tempFile = buildNextTempFile(input);
                     tempFiles.add(tempFile);
 
-                    try (CerealOutputStream cerealOutputStream = new CerealOutputStream(
-                            new FileOutputStream(tempFile))) {
+                    try (CerealOutputStream cerealOutputStream =
+                                 new CerealOutputStream(new FileOutputStream(tempFile))) {
                         for (T cereal : block) {
                             cerealOutputStream.write(cereal);
                         }
@@ -82,8 +82,8 @@ public class CerealFileSorter<T extends Cerealizable> {
         try (CerealOutputStream cerealOutputStream = new CerealOutputStream(new FileOutputStream(output.toFile()))) {
             List<CerealInputStream> tempCerealInputStreams = openTempFiles(tempFiles);
             try {
-                final PriorityQueue<ImmutablePair<T, CerealInputStream>> queue = buildPriorityQueues(
-                        tempCerealInputStreams);
+                final PriorityQueue<ImmutablePair<T, CerealInputStream>> queue =
+                        buildPriorityQueues(tempCerealInputStreams);
 
                 while (true) {
                     final ImmutablePair<T, CerealInputStream> first = queue.poll();
@@ -124,14 +124,10 @@ public class CerealFileSorter<T extends Cerealizable> {
 
     private List<CerealInputStream> openTempFiles(final List<File> tempFiles) throws FileNotFoundException {
         List<CerealInputStream> inputStreams = new LinkedList<>();
-        try {
-            for (File tempFile : tempFiles) {
-                inputStreams.add(new CerealInputStream(new FileInputStream(tempFile)));
-            }
-            return inputStreams;
-        } finally {
-            closeTempFiles(inputStreams);
+        for (File tempFile : tempFiles) {
+            inputStreams.add(new CerealInputStream(new FileInputStream(tempFile)));
         }
+        return inputStreams;
     }
 
     private PriorityQueue<ImmutablePair<T, CerealInputStream>> buildPriorityQueues(final List<CerealInputStream> tempFiles) throws IllegalAccessException, IOException, InstantiationException {
