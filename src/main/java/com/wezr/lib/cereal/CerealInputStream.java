@@ -58,4 +58,8 @@ public class CerealInputStream extends InputStream {
         throw new UnsupportedEncodingException();
     }
 
+    @Override
+    public void close() throws IOException {
+        this.inputStream.close();
+    }
 }
