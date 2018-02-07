@@ -7,6 +7,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -15,6 +17,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.UUID;
+import java.util.function.Predicate;
 
 
 /**
@@ -47,25 +51,41 @@ public class CerealFileSorter<T extends Cerealizable> {
         this.comparator = comparator;
     }
 
+    public void sort(Path input, Path output) throws IOException, InstantiationException, IllegalAccessException {
+        sort(input, t -> true, output);
+    }
+
     /**
      * Sort objects from the input file and write them, in order, to output file.
      * <p>
      * Input and output are allowed to be the same file, in which case the input file will be overwritten.
      */
-    public void sort(Path input, Path output) throws IOException, InstantiationException, IllegalAccessException {
+    public void sort(Path input, Predicate<T> filter, Path output) throws IOException, InstantiationException, IllegalAccessException {
+        try (FileInputStream fis = new FileInputStream(input.toFile());
+             FileOutputStream fos = new FileOutputStream(output.toFile())) {
+            sort(fis, filter, fos);
+        }
+    }
+
+    public void sort(InputStream input, OutputStream output) throws IOException, InstantiationException, IllegalAccessException {
+        sort(input, t -> true, output);
+    }
+
+    public void sort(InputStream input, Predicate<T> filter, OutputStream output) throws IOException, InstantiationException, IllegalAccessException {
         List<File> tempFiles = new LinkedList<>();
+        String randomUUID = UUID.randomUUID().toString();
         fileCounter = 0;
 
         // read from input into segments, sort segments, and write them to temp files.
-        try (CerealInputStream cerealInputStream = new CerealInputStream(new FileInputStream(input.toFile()))) {
+        try (CerealInputStream cerealInputStream = new CerealInputStream(input)) {
             List<T> block;
             do {
-                block = readBlock(cerealInputStream);
+                block = readBlock(cerealInputStream, filter);
 
                 if (!block.isEmpty()) {
                     block.sort(comparator);
 
-                    File tempFile = buildNextTempFile(input);
+                    File tempFile = buildNextTempFile(randomUUID);
                     tempFiles.add(tempFile);
 
                     try (CerealOutputStream cerealOutputStream = new CerealOutputStream(
@@ -79,7 +99,7 @@ public class CerealFileSorter<T extends Cerealizable> {
         }
 
         // read from all the tempfiles, and output the highest priority element to the outputfile;
-        try (CerealOutputStream cerealOutputStream = new CerealOutputStream(new FileOutputStream(output.toFile()))) {
+        try (CerealOutputStream cerealOutputStream = new CerealOutputStream(output)) {
             List<CerealInputStream> tempCerealInputStreams = openTempFiles(tempFiles);
             try {
                 final PriorityQueue<ImmutablePair<T, CerealInputStream>> queue = buildPriorityQueues(
@@ -101,6 +121,7 @@ public class CerealFileSorter<T extends Cerealizable> {
             }
         }
     }
+
 
     private void deleteTempFiles(final List<File> tempFiles) {
         for (File file : tempFiles) {
@@ -144,20 +165,21 @@ public class CerealFileSorter<T extends Cerealizable> {
         return queue;
     }
 
-    private File buildNextTempFile(final Path input) {
-        final String inputFileName = input.getFileName().toString().replace(".cereal", "");
-        return workspace.resolve(inputFileName + "_tmp_" + String.valueOf(fileCounter++) + (".cereal")).toFile();
+    private File buildNextTempFile(final String rand) {
+        return workspace.resolve(rand + "_tmp_" + String.valueOf(fileCounter++) + (".cereal")).toFile();
     }
 
-    private List<T> readBlock(final CerealInputStream cerealInputStream) throws IllegalAccessException, IOException, InstantiationException {
+    private List<T> readBlock(final CerealInputStream cerealInputStream, final Predicate<T> filter) throws IllegalAccessException, IOException, InstantiationException {
         List<T> block = new ArrayList<>();
         Optional<T> readOpt;
         long startPosition = cerealInputStream.position();
         long readSize = 0;
         do {
             readOpt = cerealInputStream.read(clazz);
-            readOpt.ifPresent(block::add);
-            readSize = cerealInputStream.position() - startPosition;
+            if (readOpt.isPresent() && filter.test(readOpt.get())) {
+                block.add(readOpt.get());
+                readSize = cerealInputStream.position() - startPosition;
+            }
         } while (readOpt.isPresent() && readSize < blockSize);
         return block;
     }
