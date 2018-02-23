@@ -2,6 +2,7 @@ package com.wezr.lib.cereal;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -113,7 +114,7 @@ public class RandUtils {
     public static String nextUTF8String(int i, int j) {
         int len = nextInt(i, j);
         StringBuffer sb = new StringBuffer(len);
-        CharsetEncoder ce = Charset.defaultCharset().newEncoder();
+        CharsetEncoder ce = StandardCharsets.UTF_8.newEncoder();
         while (sb.length() < len) {
             char c = (char) (nextInt() & Character.MAX_VALUE);
             if (Character.isDefined(c) && ce.canEncode(c)) {

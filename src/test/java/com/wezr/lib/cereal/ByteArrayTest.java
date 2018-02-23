@@ -10,6 +10,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.UUID;
@@ -147,8 +148,8 @@ public class ByteArrayTest {
     @Test
     public void charEncoderTest() throws CharacterCodingException {
         String s = RandUtils.nextUTF8String(500, 500);
-        CharsetEncoder enc = Charset.defaultCharset().newEncoder();
-        CharsetDecoder dec = Charset.defaultCharset().newDecoder();
+        CharsetEncoder enc = StandardCharsets.UTF_8.newEncoder();
+        CharsetDecoder dec = StandardCharsets.UTF_8.newDecoder();
         CharBuffer cb = CharBuffer.wrap(s);
         ByteBuffer bb = enc.encode(CharBuffer.wrap(s));
         bb.rewind();
@@ -161,19 +162,28 @@ public class ByteArrayTest {
 
     @Test
     public void badCharEncoderTest() throws CharacterCodingException {
-        String s = RandUtils.nextUTF8String(500, 500);
-        s += "‥";
-        s += RandUtils.nextUTF8String(500, 500);
-        CharsetEncoder enc = Charset.defaultCharset().newEncoder();
-        CharsetDecoder dec = Charset.defaultCharset().newDecoder();
+
+
+        String s1 = RandUtils.nextUTF8String(5, 5);
+        String s2 = RandUtils.nextUTF8String(5, 5);
+
+        String s = s1 + "‥" + s2;
+        String testResult = s1 + "‥" + s2;
+
+        CharsetEncoder enc = StandardCharsets.UTF_8.newEncoder();
+        enc.onMalformedInput(CodingErrorAction.REPLACE);
+        enc.onUnmappableCharacter(CodingErrorAction.REPLACE);
+        enc.replaceWith("$".getBytes());
+
+        CharsetDecoder dec = StandardCharsets.UTF_8.newDecoder();
         CharBuffer cb = CharBuffer.wrap(s);
         ByteBuffer bb = enc.encode(CharBuffer.wrap(s));
         bb.rewind();
         byte[] ba = new byte[bb.remaining()];
         bb.get(ba);
+
         CharBuffer dcb = dec.decode(ByteBuffer.wrap(ba));
-        assertEquals(cb, dcb);
-        assertEquals(cb.toString(), dcb.toString());
+        assertEquals(testResult, dcb.toString());
     }
 
     private void loadUnloadString(String s) {
@@ -185,8 +195,17 @@ public class ByteArrayTest {
         } else {
             // Log.trace("original: "+s.length());
             // Log.trace("test: "+testString.length());
-            assertTrue(s.equals(testString));
+            assertEquals(s, testString);
         }
+    }
+
+    @Test
+    public void localeTest() {
+        assertEquals(Charset.defaultCharset().toString(), StandardCharsets.UTF_8.toString());
+        assertEquals(Charset.defaultCharset(), StandardCharsets.UTF_8);
+
+        System.err.println("בארץ בצורך לבצע מהפכה בנבחרת, ניקוי אורוות בדומה לזה שעשתה מכבי תל אביב. איגוד הכדורסל הגיע למסקנה דומה. \"כשהיורובאסקט נגמר, קיבלנו החלטה להצעיר את הנבחרת ולבנות אותה לארבע השנים הבאות\", מספר יו\"ר הוועדה המקצועית עמוס פרישמן. השינוי הראשון נעשה בצוות המקצועי. המאמן ארז אדלשטיין נפרד אחרי ארבע שנים, ובמקומו מונה עודד קטש שצעיר ממנו ב־13 שנה. המהלך הראשון שעשה המאמן החדש");
+        System.err.println("If the above looks like Hebrew, then you're in UTF-8");
     }
 
     @Test
@@ -194,7 +213,7 @@ public class ByteArrayTest {
         loadUnloadString(new String());
         loadUnloadString(null);
         for (int t = 0; t < randIterations; t++) {
-            loadUnloadString(RandUtils.nextUTF8String(50, 50) + "‥" + RandUtils.nextUTF8String(50, 50));
+            loadUnloadString(RandUtils.nextUTF8String(50, 50));
         }
     }
 
@@ -208,7 +227,7 @@ public class ByteArrayTest {
             sb.append(c);
         }
 
-        CharsetEncoder enc = Charset.defaultCharset().newEncoder();
+        CharsetEncoder enc = StandardCharsets.UTF_8.newEncoder();
         enc.onMalformedInput(CodingErrorAction.REPLACE);
         enc.onUnmappableCharacter(CodingErrorAction.REPLACE);
         enc.replaceWith("?".getBytes());

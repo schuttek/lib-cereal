@@ -453,7 +453,7 @@ public class ByteArray implements Cerealizable {
             CharsetEncoder enc = Charset.defaultCharset().newEncoder();
             enc.onMalformedInput(CodingErrorAction.REPLACE);
             enc.onUnmappableCharacter(CodingErrorAction.REPLACE);
-            enc.replaceWith("?".getBytes());
+            enc.replaceWith("$".getBytes());
             byte[] ba;
             try {
                 ByteBuffer bb = enc.encode(CharBuffer.wrap(s));
