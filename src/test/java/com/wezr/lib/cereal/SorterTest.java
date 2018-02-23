@@ -85,7 +85,7 @@ public class SorterTest {
 
     @Test
     void largeFileSortTest() throws IOException, IllegalAccessException, InstantiationException {
-        int entries = 150 * 150 * 181;
+        int entries = 15 * 15 * 15;
 
         try (CerealOutputStream cos = new CerealOutputStream(new FileOutputStream(inputFile.toFile()))) {
             for (int t = 0; t < entries; t++) {

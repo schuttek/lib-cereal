@@ -27,6 +27,9 @@ public class BitMap implements Cerealizable {
     public boolean is(int index) {
         return (map[index / 8] & (1 << (index % 8))) != 0;
     }
+    public boolean not(int index) {
+        return !is(index);
+    }
 
     public void set(int index, boolean value) {
         if (index < 0 || index >= size) {

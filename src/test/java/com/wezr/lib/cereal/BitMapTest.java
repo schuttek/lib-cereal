@@ -34,9 +34,10 @@ class BitMapTest {
         assertTrue(bitMap.is(5));
         assertTrue(bitMap.is(6));
         assertTrue(bitMap.is(7));
-        assertFalse(bitMap.is(8));
-        assertFalse(bitMap.is(9));
+        assertTrue(bitMap.not(8));
+        assertTrue(bitMap.not(9));
     }
+
 
 
     @Test

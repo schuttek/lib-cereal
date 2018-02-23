@@ -9,6 +9,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CodingErrorAction;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.UUID;
@@ -158,6 +159,23 @@ public class ByteArrayTest {
         assertEquals(cb.toString(), dcb.toString());
     }
 
+    @Test
+    public void badCharEncoderTest() throws CharacterCodingException {
+        String s = RandUtils.nextUTF8String(500, 500);
+        s += "‥";
+        s += RandUtils.nextUTF8String(500, 500);
+        CharsetEncoder enc = Charset.defaultCharset().newEncoder();
+        CharsetDecoder dec = Charset.defaultCharset().newDecoder();
+        CharBuffer cb = CharBuffer.wrap(s);
+        ByteBuffer bb = enc.encode(CharBuffer.wrap(s));
+        bb.rewind();
+        byte[] ba = new byte[bb.remaining()];
+        bb.get(ba);
+        CharBuffer dcb = dec.decode(ByteBuffer.wrap(ba));
+        assertEquals(cb, dcb);
+        assertEquals(cb.toString(), dcb.toString());
+    }
+
     private void loadUnloadString(String s) {
         ByteArray ba = new ByteArray();
         ba.add(s);
@@ -176,9 +194,33 @@ public class ByteArrayTest {
         loadUnloadString(new String());
         loadUnloadString(null);
         for (int t = 0; t < randIterations; t++) {
-            loadUnloadString(RandUtils.nextUTF8String(50, 50));
+            loadUnloadString(RandUtils.nextUTF8String(50, 50) + "‥" + RandUtils.nextUTF8String(50, 50));
         }
     }
+
+
+    @Test
+    public void binaryStringTest() throws CharacterCodingException {
+        int len = 50000;
+        StringBuffer sb = new StringBuffer(len);
+        while (sb.length() < len) {
+            char c = (char) (RandUtils.nextInt());
+            sb.append(c);
+        }
+
+        CharsetEncoder enc = Charset.defaultCharset().newEncoder();
+        enc.onMalformedInput(CodingErrorAction.REPLACE);
+        enc.onUnmappableCharacter(CodingErrorAction.REPLACE);
+        enc.replaceWith("?".getBytes());
+        byte[] ba;
+        ByteBuffer bb = enc.encode(CharBuffer.wrap(sb.toString()));
+        bb.rewind();
+        ba = new byte[bb.remaining()];
+        bb.get(ba);
+
+        // don't throw an exception...
+    }
+
 
     private void loadUnloadByteArray(byte[] bb) {
         ByteArray ba = new ByteArray();
@@ -199,7 +241,6 @@ public class ByteArrayTest {
             loadUnloadByteArray(bq);
         }
     }
-
 
 
     @Test
@@ -259,7 +300,8 @@ public class ByteArrayTest {
                         list.add(new Tuple<Integer, Object>(type, avalue));
                         break;
                     case 9:
-                        UUID uvalue = UUIDType5.nameUUIDFromNamespaceAndString(UUIDType5.NAMESPACE_OID,RandUtils.nextUTF8String(1000, 2000));
+                        UUID uvalue = UUIDType5.nameUUIDFromNamespaceAndString(UUIDType5.NAMESPACE_OID,
+                                                                               RandUtils.nextUTF8String(1000, 2000));
                         ba.add(uvalue);
                         list.add(new Tuple<Integer, Object>(type, uvalue));
                         break;
