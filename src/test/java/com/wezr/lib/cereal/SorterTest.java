@@ -23,8 +23,8 @@ public class SorterTest {
 
     public static final int iterations = 5000;
     final ConverterTest converterTest = new ConverterTest();
-    final Path inputFile = Paths.get("./src/test/resources/sorter_input.cereal");
-    final Path outputFile = Paths.get("./src/test/resources/sorter_output.cereal");
+    final Path inputFile = Paths.get("./build/sorter_input.cereal");
+    final Path outputFile = Paths.get("./build/sorter_output.cereal");
 
     @AfterEach
     void cleanup() throws IOException {
@@ -47,7 +47,7 @@ public class SorterTest {
 
         CerealFileSorter<Forecast> sorter =
                 new CerealFileSorter<>(Forecast.class, 2048,
-                                       Paths.get("./src/test/resources/"),
+                                       Paths.get("./build/"),
                                        new ForecastComparator());
 
         sorter.sort(inputFile, outputFile);
@@ -96,7 +96,7 @@ public class SorterTest {
 
         CerealFileSorter<Forecast> sorter =
                 new CerealFileSorter<>(Forecast.class, 10 * 1024 * 1024,
-                                       Paths.get("./src/test/resources/"),
+                                       Paths.get("./build/"),
                                        new ForecastComparator());
 
         sorter.sort(inputFile, outputFile);

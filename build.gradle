@@ -1,0 +1,84 @@
+import org.gradle.api.publish.maven.MavenPublication
+
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven {
+            url  "https://dl.bintray.com/wezr-ci/com.wezr"
+        }
+    }
+    dependencies {
+        classpath group: 'com.wezr', name: 'plugin-gradle-build', version: '0.1.11'
+    }
+}
+plugins {
+    id "com.jfrog.bintray" version '1.8.2'
+}
+apply plugin: 'com.wezr.plugin.gradle.build'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url  "https://dl.bintray.com/wezr-ci/com.wezr"
+    }
+}
+
+/* Build settings */
+
+dependencies {
+    compile 'org.apache.commons:commons-lang3:3.6'
+    compile 'commons-io:commons-io:2.5'
+
+    compile 'org.xerial.snappy:snappy-java:1.1.4'
+    compile 'org.anarres.lzo:lzo-core:1.0.5'
+
+}
+
+ext.wezrConfiguration = [
+        name        : 'lib-cereal',
+        versionMajor: 0,
+        versionMinor: 4,
+        versionBuild: 21
+]
+
+
+String thisVersion = new StringBuilder()
+        .append(wezrConfiguration.versionMajor).append('.')
+        .append(wezrConfiguration.versionMinor).append('.')
+        .append(wezrConfiguration.versionBuild).toString()
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            groupId 'com.wezr'
+            artifactId wezrConfiguration.name
+            version thisVersion
+        }
+    }
+}
+
+bintray {
+    user = project.hasProperty('bintray.user') ? project.property('bintray.user') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintray.apikey') ? project.property('bintray.apikey') : System.getenv('BINTRAY_API_KEY')
+    publications = ['MyPublication']
+    override = true
+    pkg {
+        repo = 'com.wezr'
+        name = wezrConfiguration.name
+        userOrg = 'wezr-ci'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/Wezr/'+wezrConfiguration.name+'.git'
+        publicDownloadNumbers = true
+
+        version {
+            name = thisVersion
+            desc = wezrConfiguration.name
+            vcsTag = thisVersion
+        }
+    }
+}
