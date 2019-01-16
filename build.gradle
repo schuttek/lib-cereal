@@ -4,16 +4,18 @@ buildscript {
     repositories {
         maven {
             url System.getenv('NEXUS_URL')
-            credentials {
-                username System.getenv('NEXUS_USER')
-                password System.getenv('NEXUS_PASSWORD')
+            if (!url.getScheme().equals("file")) {
+                credentials {
+                    username System.getenv('NEXUS_USER')
+                    password System.getenv('NEXUS_PASSWORD')
+                }
             }
         }
         mavenCentral()
         jcenter()
     }
     dependencies {
-        classpath group: 'com.wezr', name: 'plugin-gradle-build', version: '0.1.12'
+        classpath group: 'com.wezr', name: 'plugin-gradle-build', version: '0.1.13'
     }
 }
 
