@@ -14,7 +14,7 @@ properties([
 ])
 
 /* Run */
-final def doDeployment = deploy == null ? false : deploy.toBoolean()
+final def doDeployment = params.deploy == null ? false : params.deploy
 
 node {
 	final def JAVA_HOME = tool 'JDK8'
