@@ -39,20 +39,3 @@ ext.wezrConfiguration = [
         versionMinor: 0,
         versionBuild: 0
 ]
-
-
-String thisVersion = new StringBuilder()
-        .append(wezrConfiguration.versionMajor).append('.')
-        .append(wezrConfiguration.versionMinor).append('.')
-        .append(wezrConfiguration.versionBuild).toString()
-
-publishing {
-    publications {
-        MyPublication(MavenPublication) {
-            from components.java
-            groupId System.getenv('NEXUS_GROUP_ID')
-            artifactId wezrConfiguration.name
-            version thisVersion
-        }
-    }
-}
