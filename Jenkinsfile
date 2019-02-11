@@ -55,7 +55,7 @@ node {
 			
 			if (doDeployment) {
 				stage('Deployment') {
-					sh './gradlew --no-daemon upload'
+					sh './gradlew --no-daemon publish'
 				}
 
 			} else {
