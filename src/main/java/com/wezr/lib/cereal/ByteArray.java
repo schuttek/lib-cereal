@@ -513,6 +513,10 @@ public class ByteArray implements Cerealizable {
         return uncerealize(clazz);
     }
 
+    /**
+     * add a array of Cerealizable objects to this ByteArray
+     * @param array must be "complete" - may not contain null values.
+     */
     public <T extends Cerealizable> void add(T[] array) {
         add(array.length);
         for (int t = 0; t < array.length; t++) {
@@ -520,6 +524,10 @@ public class ByteArray implements Cerealizable {
         }
     }
 
+    /**
+     * uncerealize an array of Cerealizables of type clazz from this ByteArray
+     * as added by {@link #add(Cerealizable[])}
+     */
     @SuppressWarnings("unchecked")
     public <T extends Cerealizable> T[] getArray(Class<T> clazz) {
         T[] array = (T[]) Array.newInstance(clazz, getInt());
@@ -529,49 +537,65 @@ public class ByteArray implements Cerealizable {
         return array;
     }
 
+    /**
+     * add a two dimensional array of Cerealizable objects to this ByteArray
+     * @param array must be "complete" - may not contain null values. each sub array may be of different lengths.
+     */
     public <T extends Cerealizable> void add(T[][] array) {
         add(array.length);
         for (int i = 0; i < array.length; i++) {
             add(array[i].length);
-            for (int j = 0; j < array.length; j++) {
+            for (int j = 0; j < array[i].length; j++) {
                 array[i][j].cerealizeTo(this);
             }
         }
     }
 
+    /**
+     * uncerealize a two dimensional array of Cerealizables of type clazz from this ByteArray
+     * as added by {@link #add(Cerealizable[][])}
+     */
     @SuppressWarnings("unchecked")
     public <T extends Cerealizable> T[][] get2DArray(Class<T> clazz) {
         T[][] array = (T[][]) Array.newInstance(clazz, getInt(), 0);
         for (int i = 0; i < array.length; i++) {
             array[i] = (T[]) Array.newInstance(clazz, getInt());
-            for (int j = 0; j < array.length; j++) {
+            for (int j = 0; j < array[i].length; j++) {
                 array[i][j] = uncerealize(clazz);
             }
         }
         return array;
     }
 
+    /**
+     * add a 3 dimensional array of Cerealizable objects to this ByteArray
+     * @param array must be "complete" - may not contain null values. each sub array may be of different lengths.
+     */
     public <T extends Cerealizable> void add(T[][][] array) {
         add(array.length);
         for (int i = 0; i < array.length; i++) {
             add(array[i].length);
-            for (int j = 0; j < array.length; j++) {
+            for (int j = 0; j < array[i].length; j++) {
                 add(array[i][j].length);
-                for (int k = 0; k < array.length; k++) {
+                for (int k = 0; k < array[i][j].length; k++) {
                     array[i][j][k].cerealizeTo(this);
                 }
             }
         }
     }
 
+    /**
+     * uncerealize a three dimensional array of Cerealizables of type clazz from this ByteArray
+     * as added by {@link #add(Cerealizable[][][])}
+     */
     @SuppressWarnings("unchecked")
     public <T extends Cerealizable> T[][][] get3DArray(Class<T> clazz) {
         T[][][] array = (T[][][]) Array.newInstance(clazz, getInt(), 0, 0);
         for (int i = 0; i < array.length; i++) {
             array[i] = (T[][]) Array.newInstance(clazz, getInt(), 0);
-            for (int j = 0; j < array.length; j++) {
+            for (int j = 0; j < array[i].length; j++) {
                 array[i][j] = (T[]) Array.newInstance(clazz, getInt());
-                for (int k = 0; k < array.length; k++) {
+                for (int k = 0; k < array[i][j].length; k++) {
                     array[i][j][k] = uncerealize(clazz);
                 }
             }

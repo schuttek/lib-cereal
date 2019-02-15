@@ -279,9 +279,9 @@ public class ByteArrayTest {
     @Test
     void cerealizable2DArrayTest() {
         final ConverterTest converterTest = new ConverterTest();
-        Forecast[][] array = new Forecast[5][5];
+        Forecast[][] array = new Forecast[5][6];
         for (int x = 0; x < array.length; x++) {
-            for (int y = 0; y < array.length; y++) {
+            for (int y = 0; y < array[x].length; y++) {
                 array[x][y] = converterTest.getRandomForecast(true);
             }
         }
@@ -295,10 +295,10 @@ public class ByteArrayTest {
     @Test
     void cerealizable3DArrayTest() {
         final ConverterTest converterTest = new ConverterTest();
-        Forecast[][][] array = new Forecast[5][5][5];
+        Forecast[][][] array = new Forecast[5][6][7];
         for (int x = 0; x < array.length; x++) {
-            for (int y = 0; y < array.length; y++) {
-                for (int z = 0; z < array.length; z++) {
+            for (int y = 0; y < array[x].length; y++) {
+                for (int z = 0; z < array[x][y].length; z++) {
                     array[x][y][z] = converterTest.getRandomForecast(true);
                 }
             }
