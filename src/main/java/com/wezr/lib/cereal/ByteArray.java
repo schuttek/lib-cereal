@@ -1,5 +1,6 @@
 package com.wezr.lib.cereal;
 
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -237,7 +238,8 @@ public class ByteArray implements Cerealizable {
             return new byte[0];
         }
         if (numBytes > this.length) {
-            throw new ArrayIndexOutOfBoundsException("Tried to remove "+numBytes+", while length is "+this.length);
+            throw new ArrayIndexOutOfBoundsException(
+                    "Tried to remove " + numBytes + ", while length is " + this.length);
         }
         coalesce();
         byte[] ret = new byte[numBytes];
@@ -502,6 +504,81 @@ public class ByteArray implements Cerealizable {
             add(uuid);
         }
     }
+
+    public <T extends Cerealizable> void add(T cerealizable) {
+        cerealizable.cerealizeTo(this);
+    }
+
+    public <T extends Cerealizable> T get(Class<T> clazz) {
+        return uncerealize(clazz);
+    }
+
+    public <T extends Cerealizable> void add(T[] array) {
+        add(array.length);
+        for (int t = 0; t < array.length; t++) {
+            array[t].cerealizeTo(this);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Cerealizable> T[] getArray(Class<T> clazz) {
+        T[] array = (T[]) Array.newInstance(clazz, getInt());
+        for (int i = 0; i < array.length; i++) {
+            array[i] = uncerealize(clazz);
+        }
+        return array;
+    }
+
+    public <T extends Cerealizable> void add(T[][] array) {
+        add(array.length);
+        for (int i = 0; i < array.length; i++) {
+            add(array[i].length);
+            for (int j = 0; j < array.length; j++) {
+                array[i][j].cerealizeTo(this);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Cerealizable> T[][] get2DArray(Class<T> clazz) {
+        T[][] array = (T[][]) Array.newInstance(clazz, getInt(), 0);
+        for (int i = 0; i < array.length; i++) {
+            array[i] = (T[]) Array.newInstance(clazz, getInt());
+            for (int j = 0; j < array.length; j++) {
+                array[i][j] = uncerealize(clazz);
+            }
+        }
+        return array;
+    }
+
+    public <T extends Cerealizable> void add(T[][][] array) {
+        add(array.length);
+        for (int i = 0; i < array.length; i++) {
+            add(array[i].length);
+            for (int j = 0; j < array.length; j++) {
+                add(array[i][j].length);
+                for (int k = 0; k < array.length; k++) {
+                    array[i][j][k].cerealizeTo(this);
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Cerealizable> T[][][] get3DArray(Class<T> clazz) {
+        T[][][] array = (T[][][]) Array.newInstance(clazz, getInt(), 0, 0);
+        for (int i = 0; i < array.length; i++) {
+            array[i] = (T[][]) Array.newInstance(clazz, getInt(), 0);
+            for (int j = 0; j < array.length; j++) {
+                array[i][j] = (T[]) Array.newInstance(clazz, getInt());
+                for (int k = 0; k < array.length; k++) {
+                    array[i][j][k] = uncerealize(clazz);
+                }
+            }
+        }
+        return array;
+    }
+
 
     public byte[] getByteArray() {
         int len = getInt();

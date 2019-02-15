@@ -204,7 +204,8 @@ public class ByteArrayTest {
         assertEquals(Charset.defaultCharset().toString(), StandardCharsets.UTF_8.toString());
         assertEquals(Charset.defaultCharset(), StandardCharsets.UTF_8);
 
-        System.err.println("בארץ בצורך לבצע מהפכה בנבחרת, ניקוי אורוות בדומה לזה שעשתה מכבי תל אביב. איגוד הכדורסל הגיע למסקנה דומה. \"כשהיורובאסקט נגמר, קיבלנו החלטה להצעיר את הנבחרת ולבנות אותה לארבע השנים הבאות\", מספר יו\"ר הוועדה המקצועית עמוס פרישמן. השינוי הראשון נעשה בצוות המקצועי. המאמן ארז אדלשטיין נפרד אחרי ארבע שנים, ובמקומו מונה עודד קטש שצעיר ממנו ב־13 שנה. המהלך הראשון שעשה המאמן החדש");
+        System.err.println(
+                "בארץ בצורך לבצע מהפכה בנבחרת, ניקוי אורוות בדומה לזה שעשתה מכבי תל אביב. איגוד הכדורסל הגיע למסקנה דומה. \"כשהיורובאסקט נגמר, קיבלנו החלטה להצעיר את הנבחרת ולבנות אותה לארבע השנים הבאות\", מספר יו\"ר הוועדה המקצועית עמוס פרישמן. השינוי הראשון נעשה בצוות המקצועי. המאמן ארז אדלשטיין נפרד אחרי ארבע שנים, ובמקומו מונה עודד קטש שצעיר ממנו ב־13 שנה. המהלך הראשון שעשה המאמן החדש");
         System.err.println("If the above looks like Hebrew, then you're in UTF-8");
     }
 
@@ -259,6 +260,54 @@ public class ByteArrayTest {
             bq[0] = t;
             loadUnloadByteArray(bq);
         }
+    }
+
+    @Test
+    void cerealizableArrayTest() {
+        final ConverterTest converterTest = new ConverterTest();
+        Forecast[] array = new Forecast[15];
+        for (int t = 0; t < array.length; t++) {
+            array[t] = converterTest.getRandomForecast(true);
+        }
+
+        ByteArray ba = new ByteArray();
+        ba.add(array);
+        final Forecast[] testArray = ba.getArray(Forecast.class);
+        assertArrayEquals(array, testArray);
+    }
+
+    @Test
+    void cerealizable2DArrayTest() {
+        final ConverterTest converterTest = new ConverterTest();
+        Forecast[][] array = new Forecast[5][5];
+        for (int x = 0; x < array.length; x++) {
+            for (int y = 0; y < array.length; y++) {
+                array[x][y] = converterTest.getRandomForecast(true);
+            }
+        }
+
+        ByteArray ba = new ByteArray();
+        ba.add(array);
+        final Forecast[][] testArray = ba.get2DArray(Forecast.class);
+        assertArrayEquals(array, testArray);
+    }
+
+    @Test
+    void cerealizable3DArrayTest() {
+        final ConverterTest converterTest = new ConverterTest();
+        Forecast[][][] array = new Forecast[5][5][5];
+        for (int x = 0; x < array.length; x++) {
+            for (int y = 0; y < array.length; y++) {
+                for (int z = 0; z < array.length; z++) {
+                    array[x][y][z] = converterTest.getRandomForecast(true);
+                }
+            }
+        }
+
+        ByteArray ba = new ByteArray();
+        ba.add(array);
+        final Forecast[][][] testArray = ba.get3DArray(Forecast.class);
+        assertArrayEquals(array, testArray);
     }
 
 
@@ -320,7 +369,9 @@ public class ByteArrayTest {
                         break;
                     case 9:
                         UUID uvalue = UUIDType5.nameUUIDFromNamespaceAndString(UUIDType5.NAMESPACE_OID,
-                                                                               RandUtils.nextUTF8String(1000, 2000));
+                                                                               RandUtils
+                                                                                       .nextUTF8String(1000,
+                                                                                                       2000));
                         ba.add(uvalue);
                         list.add(new Tuple<Integer, Object>(type, uvalue));
                         break;
