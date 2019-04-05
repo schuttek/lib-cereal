@@ -1,6 +1,8 @@
 package com.wezr.lib.cereal;
 
 
+import com.wezr.lib.cereal.cerealizer.StringCerealizer;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -439,4 +441,29 @@ public class ByteArrayTest {
         }
     }
 
+    @Test
+    @DisplayName("Data is correctly encoded/decoded when used with cerealizer")
+    void data_with_cerealizer() {
+        // Setup
+        final ByteArray ba = new ByteArray();
+        ba.add(new StringCerealizer(), "Somestring");
+        // Exercise
+        // Verify
+        final ByteArray ba2 = new ByteArray(ba);
+        assertEquals("Somestring", ba.get(new StringCerealizer()));
+    }
+
+
+    @Test
+    @DisplayName("Data array is correctly encoded/decoded when used with cerealizer")
+    void array_with_cerealizer() {
+        // Setup
+        final ByteArray ba = new ByteArray();
+        ba.add(new StringCerealizer(), new String[]{"Ss1", "Ss2", "Ss3"});
+        // Exercise
+        // Verify
+        final ByteArray ba2 = new ByteArray(ba);
+        final String[] array = ba2.getArray(new StringCerealizer(), String.class);
+        assertArrayEquals(new String[]{"Ss1", "Ss2", "Ss3"}, array);
+    }
 }
