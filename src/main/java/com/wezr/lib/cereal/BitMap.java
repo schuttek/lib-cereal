@@ -6,6 +6,7 @@ public class BitMap implements Cerealizable {
 
     private byte[] map;
     private int size;
+    protected boolean outOfBoundValue = false;
 
     public BitMap(int size) {
         this.size = size;
@@ -25,8 +26,12 @@ public class BitMap implements Cerealizable {
     }
 
     public boolean is(int index) {
+        if (index < 0 || index >= size) {
+            return outOfBoundValue;
+        }
         return (map[index / 8] & (1 << (index % 8))) != 0;
     }
+
     public boolean not(int index) {
         return !is(index);
     }
