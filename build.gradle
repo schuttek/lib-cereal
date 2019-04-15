@@ -34,5 +34,5 @@ ext.wezrConfiguration = [
         name        : 'lib-cereal',
         versionMajor: 2,
         versionMinor: 0,
-        versionBuild: 0
+        versionBuild: 1
 ]
