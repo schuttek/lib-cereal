@@ -1,5 +1,7 @@
 package com.wezr.lib.cereal;
 
+import com.wezr.lib.cereal.cerealizer.Cerealizer;
+
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -46,7 +48,7 @@ public class ByteArray implements Cerealizable {
     private Chunk front = null;
     private Chunk back = null;
 
-    public ByteArray(byte[] b) {
+    public ByteArray(final byte[] b) {
         addRawBytes(b);
     }
 
@@ -60,29 +62,29 @@ public class ByteArray implements Cerealizable {
      *
      * @param ba
      */
-    public ByteArray(ByteArray ba) {
+    public ByteArray(final ByteArray ba) {
         ba.coalesce();
-        byte[] copyBuffer = new byte[ba.front.length];
+        final byte[] copyBuffer = new byte[ba.front.length];
         System.arraycopy(ba.front.array, 0, copyBuffer, 0, ba.front.array.length);
         front = back = makeChunk(copyBuffer, 0, copyBuffer.length);
         length = ba.length;
     }
 
-    public ByteArray(ByteBuffer byteBuffer) {
-        byte[] bytes = new byte[byteBuffer.remaining()];
+    public ByteArray(final ByteBuffer byteBuffer) {
+        final byte[] bytes = new byte[byteBuffer.remaining()];
         byteBuffer.get(bytes);
         addRawBytes(bytes);
     }
 
-    public static ByteArray wrap(byte[] bytes) {
+    public static ByteArray wrap(final byte[] bytes) {
         return new ByteArray(bytes);
     }
 
-    public static ByteArray wrap(ByteBuffer byteBuffer) {
+    public static ByteArray wrap(final ByteBuffer byteBuffer) {
         return new ByteArray(byteBuffer);
     }
 
-    public static short bytesToShort(byte[] array, int offset) {
+    public static short bytesToShort(final byte[] array, final int offset) {
         short n = 0;
         n ^= array[offset] & 0xFF;
         n <<= 8;
@@ -90,13 +92,13 @@ public class ByteArray implements Cerealizable {
         return n;
     }
 
-    public static void shortToBytes(short val, byte[] byteBuff, int offset) {
+    public static void shortToBytes(short val, final byte[] byteBuff, final int offset) {
         byteBuff[offset + 1] = (byte) val;
         val >>= 8;
         byteBuff[offset] = (byte) val;
     }
 
-    public static long bytesToLong(byte[] array, int offset) {
+    public static long bytesToLong(final byte[] array, final int offset) {
         long l = 0;
         for (int i = offset; i < offset + 8; i++) {
             l <<= 8;
@@ -105,7 +107,7 @@ public class ByteArray implements Cerealizable {
         return l;
     }
 
-    public static void longToBytes(long l, byte[] bb, int offset) {
+    public static void longToBytes(long l, final byte[] bb, final int offset) {
         for (int i = 7 + offset; i > offset; i--) {
             bb[i] = (byte) l;
             l >>>= 8;
@@ -113,12 +115,12 @@ public class ByteArray implements Cerealizable {
         bb[offset] = (byte) l;
     }
 
-    public static int bytesToInt(byte[] array, int offset) {
+    public static int bytesToInt(final byte[] array, final int offset) {
         return array[offset] << 24 | (array[offset + 1] & 0xFF) << 16 | (array[offset + 2] & 0xFF) << 8
                 | (array[offset + 3] & 0xFF);
     }
 
-    public static void intToBytes(int i, byte[] byteBuff, int offset) {
+    public static void intToBytes(final int i, final byte[] byteBuff, final int offset) {
         for (int t = 0; t < 4; t++) {
             byteBuff[offset + t] = (byte) (i >> (4 - (t + 1)) * 8);
         }
@@ -136,45 +138,45 @@ public class ByteArray implements Cerealizable {
      * @param bb
      * @param offset
      */
-    public static void doubleToBytes(double d, byte[] bb, int offset) {
+    public static void doubleToBytes(final double d, final byte[] bb, final int offset) {
         longToBytes(Double.doubleToLongBits(d), bb, offset);
     }
 
-    public static double bytesToDouble(byte[] array, int offset) {
+    public static double bytesToDouble(final byte[] array, final int offset) {
         return Double.longBitsToDouble(bytesToLong(array, offset));
     }
 
-    public static void floatToBytes(float f, byte[] bb, int offset) {
+    public static void floatToBytes(final float f, final byte[] bb, final int offset) {
         intToBytes(Float.floatToIntBits(f), bb, offset);
     }
 
-    public static float bytesToFloat(byte[] array, int offset) {
+    public static float bytesToFloat(final byte[] array, final int offset) {
         return Float.intBitsToFloat(bytesToInt(array, offset));
     }
 
-    public static ByteArray cerealize(Cerealizable cerealizable) {
-        ByteArray ba = new ByteArray();
+    public static ByteArray cerealize(final Cerealizable cerealizable) {
+        final ByteArray ba = new ByteArray();
         cerealizable.cerealizeTo(ba);
         return ba;
     }
 
-    private Chunk makeChunk(byte[] b, int fromIdx, int length) {
+    private Chunk makeChunk(final byte[] b, final int fromIdx, final int length) {
         if (fromIdx + length > b.length) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Chunk tree = new Chunk();
+        final Chunk tree = new Chunk();
         tree.array = b;
         tree.startIdx = fromIdx;
         tree.length = length;
         return tree;
     }
 
-    public void addToFront(byte[] b, int fromIdx, int length) {
+    public void addToFront(final byte[] b, final int fromIdx, final int length) {
         if (length == 0) {
             return;
         }
-        Chunk chunk = makeChunk(b, fromIdx, length);
+        final Chunk chunk = makeChunk(b, fromIdx, length);
         if (front == null) {
             front = chunk;
             back = front;
@@ -185,11 +187,11 @@ public class ByteArray implements Cerealizable {
         this.length += chunk.length;
     }
 
-    public void addRawBytes(byte[] b, int fromIdx, int length) {
+    public void addRawBytes(final byte[] b, final int fromIdx, final int length) {
         if (length == 0) {
             return;
         }
-        Chunk chunk = makeChunk(b, fromIdx, length);
+        final Chunk chunk = makeChunk(b, fromIdx, length);
         if (front == null) {
             front = chunk;
             back = chunk;
@@ -215,7 +217,7 @@ public class ByteArray implements Cerealizable {
         if (front == null || front.next == null) {
             return;
         }
-        byte[] bb = new byte[length];
+        final byte[] bb = new byte[length];
 
         int i = 0;
         Chunk cursor = front;
@@ -233,7 +235,7 @@ public class ByteArray implements Cerealizable {
         return length;
     }
 
-    public byte[] remove(int numBytes) {
+    public byte[] remove(final int numBytes) {
         if (numBytes == 0) {
             return new byte[0];
         }
@@ -242,7 +244,7 @@ public class ByteArray implements Cerealizable {
                     "Tried to remove " + numBytes + ", while length is " + this.length);
         }
         coalesce();
-        byte[] ret = new byte[numBytes];
+        final byte[] ret = new byte[numBytes];
         System.arraycopy(front.array, front.startIdx, ret, 0, numBytes);
 
         if (front.length - numBytes == 0) {
@@ -282,23 +284,23 @@ public class ByteArray implements Cerealizable {
     }
 
     public String getString() {
-        int len = getInt();
+        final int len = getInt();
         if (len == -1) {
             return null;
         }
-        byte[] sb = remove(len);
+        final byte[] sb = remove(len);
 
-        CharsetDecoder dec = Charset.defaultCharset().newDecoder();
+        final CharsetDecoder dec = Charset.defaultCharset().newDecoder();
         dec.onMalformedInput(CodingErrorAction.IGNORE);
         try {
             return dec.decode(ByteBuffer.wrap(sb)).toString();
-        } catch (CharacterCodingException e) {
+        } catch (final CharacterCodingException e) {
             throw new RuntimeException(e);
         }
     }
 
     public boolean getBoolean() {
-        byte[] b = remove(1);
+        final byte[] b = remove(1);
         if (b[0] == 0) {
             return false;
         }
@@ -306,12 +308,12 @@ public class ByteArray implements Cerealizable {
     }
 
     public UUID getUUID() {
-        long most = getLong();
-        long least = getLong();
+        final long most = getLong();
+        final long least = getLong();
         return new UUID(most, least);
     }
 
-    public void addByteArray(byte[] b) {
+    public void addByteArray(final byte[] b) {
         if (b == null) {
             add(-1);
         } else if (b.length == 0) {
@@ -322,7 +324,7 @@ public class ByteArray implements Cerealizable {
         }
     }
 
-    public void addByteArrayToFront(byte[] b) {
+    public void addByteArrayToFront(final byte[] b) {
         if (b == null) {
             addToFront(-1);
         } else if (b.length == 0) {
@@ -333,136 +335,136 @@ public class ByteArray implements Cerealizable {
         }
     }
 
-    public void addRawBytesToFront(byte[] b) {
+    public void addRawBytesToFront(final byte[] b) {
         addToFront(b, 0, b.length);
     }
 
-    public void addRawBytes(byte[] b) {
+    public void addRawBytes(final byte[] b) {
         addRawBytes(b, 0, b.length);
     }
 
-    public void addToFront(int i) {
-        byte[] b = new byte[4];
+    public void addToFront(final int i) {
+        final byte[] b = new byte[4];
         intToBytes(i, b, 0);
         addRawBytesToFront(b);
     }
 
-    public void add(byte b) {
-        byte[] ba = new byte[1];
+    public void add(final byte b) {
+        final byte[] ba = new byte[1];
         ba[0] = b;
         addRawBytes(ba);
     }
 
-    public void addIfNotNull(Byte value) {
+    public void addIfNotNull(final Byte value) {
         if (value != null) {
             add(value);
         }
     }
 
-    public void add(short s) {
-        byte[] b = new byte[2];
+    public void add(final short s) {
+        final byte[] b = new byte[2];
         shortToBytes(s, b, 0);
         addRawBytes(b);
     }
 
-    public void addIfNotNull(Short value) {
+    public void addIfNotNull(final Short value) {
         if (value != null) {
             add(value);
         }
     }
 
-    public void add(int i) {
-        byte[] b = new byte[4];
+    public void add(final int i) {
+        final byte[] b = new byte[4];
         intToBytes(i, b, 0);
         addRawBytes(b);
     }
 
-    public void addIfNotNull(Integer value) {
+    public void addIfNotNull(final Integer value) {
         if (value != null) {
             add(value);
         }
     }
 
-    public void addToFront(long l) {
-        byte[] b = new byte[8];
+    public void addToFront(final long l) {
+        final byte[] b = new byte[8];
         longToBytes(l, b, 0);
         addRawBytesToFront(b);
     }
 
-    public void addIfNotNull(Long value) {
+    public void addIfNotNull(final Long value) {
         if (value != null) {
             add(value);
         }
     }
 
-    public void add(long l) {
-        byte[] b = new byte[8];
+    public void add(final long l) {
+        final byte[] b = new byte[8];
         longToBytes(l, b, 0);
         addRawBytes(b);
     }
 
-    public void addToFront(double d) {
-        long l = Double.doubleToRawLongBits(d);
-        byte[] b = new byte[8];
+    public void addToFront(final double d) {
+        final long l = Double.doubleToRawLongBits(d);
+        final byte[] b = new byte[8];
         longToBytes(l, b, 0);
         addRawBytesToFront(b);
     }
 
-    public void add(double d) {
-        byte[] b = new byte[8];
+    public void add(final double d) {
+        final byte[] b = new byte[8];
         doubleToBytes(d, b, 0);
         addRawBytes(b);
     }
 
-    public void addIfNotNull(Double value) {
+    public void addIfNotNull(final Double value) {
         if (value != null) {
             add(value);
         }
     }
 
-    public void addToFront(float f) {
-        byte[] b = new byte[8];
+    public void addToFront(final float f) {
+        final byte[] b = new byte[8];
         floatToBytes(f, b, 0);
         addRawBytesToFront(b);
     }
 
-    public void add(float f) {
-        byte[] b = new byte[4];
+    public void add(final float f) {
+        final byte[] b = new byte[4];
         floatToBytes(f, b, 0);
         addRawBytes(b);
     }
 
-    public void addIfNotNull(Float value) {
+    public void addIfNotNull(final Float value) {
         if (value != null) {
             add(value);
         }
     }
 
-    public void addToFront(String s) {
+    public void addToFront(final String s) {
         if (s == null) {
             addToFront(0);
         } else {
-            byte[] b = s.getBytes();
+            final byte[] b = s.getBytes();
             addRawBytesToFront(b);
             addToFront(b.length);
         }
     }
 
-    public void add(String s) {
+    public void add(final String s) {
         if (s == null) {
             add(-1);
         } else {
-            CharsetEncoder enc = Charset.defaultCharset().newEncoder();
+            final CharsetEncoder enc = Charset.defaultCharset().newEncoder();
             enc.onMalformedInput(CodingErrorAction.REPLACE);
             enc.onUnmappableCharacter(CodingErrorAction.REPLACE);
             enc.replaceWith("$".getBytes());
-            byte[] ba;
+            final byte[] ba;
             try {
-                ByteBuffer bb = enc.encode(CharBuffer.wrap(s));
+                final ByteBuffer bb = enc.encode(CharBuffer.wrap(s));
                 bb.rewind();
                 ba = new byte[bb.remaining()];
                 bb.get(ba);
-            } catch (CharacterCodingException e) {
+            } catch (final CharacterCodingException e) {
                 throw new RuntimeException(e);
             }
             add(ba.length);
@@ -470,54 +472,55 @@ public class ByteArray implements Cerealizable {
         }
     }
 
-    public void addIfNotNull(String value) {
+    public void addIfNotNull(final String value) {
         if (value != null) {
             add(value);
         }
     }
 
-    public void addToFront(boolean bool) {
-        byte[] b = new byte[1];
+    public void addToFront(final boolean bool) {
+        final byte[] b = new byte[1];
         b[0] = (byte) ((bool) ? 1 : 0);
         addRawBytesToFront(b);
     }
 
-    public void add(boolean bool) {
-        byte[] b = new byte[1];
+    public void add(final boolean bool) {
+        final byte[] b = new byte[1];
         b[0] = (byte) ((bool) ? 1 : 0);
         addRawBytes(b);
     }
 
-    public void addIfNotNull(Boolean value) {
+    public void addIfNotNull(final Boolean value) {
         if (value != null) {
             add(value);
         }
     }
 
-    public void add(UUID uuid) {
+    public void add(final UUID uuid) {
         add(uuid.getMostSignificantBits());
         add(uuid.getLeastSignificantBits());
     }
 
-    public void addIfNotNull(UUID uuid) {
+    public void addIfNotNull(final UUID uuid) {
         if (uuid != null) {
             add(uuid);
         }
     }
 
-    public <T extends Cerealizable> void add(T cerealizable) {
+    public <T extends Cerealizable> void add(final T cerealizable) {
         cerealizable.cerealizeTo(this);
     }
 
-    public <T extends Cerealizable> T get(Class<T> clazz) {
+    public <T extends Cerealizable> T get(final Class<T> clazz) {
         return uncerealize(clazz);
     }
 
     /**
      * add a array of Cerealizable objects to this ByteArray
+     *
      * @param array must be "complete" - may not contain null values.
      */
-    public <T extends Cerealizable> void add(T[] array) {
+    public <T extends Cerealizable> void add(final T[] array) {
         add(array.length);
         for (int t = 0; t < array.length; t++) {
             array[t].cerealizeTo(this);
@@ -529,8 +532,8 @@ public class ByteArray implements Cerealizable {
      * as added by {@link #add(Cerealizable[])}
      */
     @SuppressWarnings("unchecked")
-    public <T extends Cerealizable> T[] getArray(Class<T> clazz) {
-        T[] array = (T[]) Array.newInstance(clazz, getInt());
+    public <T extends Cerealizable> T[] getArray(final Class<T> clazz) {
+        final T[] array = (T[]) Array.newInstance(clazz, getInt());
         for (int i = 0; i < array.length; i++) {
             array[i] = uncerealize(clazz);
         }
@@ -539,9 +542,10 @@ public class ByteArray implements Cerealizable {
 
     /**
      * add a two dimensional array of Cerealizable objects to this ByteArray
+     *
      * @param array must be "complete" - may not contain null values. each sub array may be of different lengths.
      */
-    public <T extends Cerealizable> void add(T[][] array) {
+    public <T extends Cerealizable> void add(final T[][] array) {
         add(array.length);
         for (int i = 0; i < array.length; i++) {
             add(array[i].length);
@@ -556,8 +560,8 @@ public class ByteArray implements Cerealizable {
      * as added by {@link #add(Cerealizable[][])}
      */
     @SuppressWarnings("unchecked")
-    public <T extends Cerealizable> T[][] get2DArray(Class<T> clazz) {
-        T[][] array = (T[][]) Array.newInstance(clazz, getInt(), 0);
+    public <T extends Cerealizable> T[][] get2DArray(final Class<T> clazz) {
+        final T[][] array = (T[][]) Array.newInstance(clazz, getInt(), 0);
         for (int i = 0; i < array.length; i++) {
             array[i] = (T[]) Array.newInstance(clazz, getInt());
             for (int j = 0; j < array[i].length; j++) {
@@ -569,9 +573,10 @@ public class ByteArray implements Cerealizable {
 
     /**
      * add a 3 dimensional array of Cerealizable objects to this ByteArray
+     *
      * @param array must be "complete" - may not contain null values. each sub array may be of different lengths.
      */
-    public <T extends Cerealizable> void add(T[][][] array) {
+    public <T extends Cerealizable> void add(final T[][][] array) {
         add(array.length);
         for (int i = 0; i < array.length; i++) {
             add(array[i].length);
@@ -589,8 +594,8 @@ public class ByteArray implements Cerealizable {
      * as added by {@link #add(Cerealizable[][][])}
      */
     @SuppressWarnings("unchecked")
-    public <T extends Cerealizable> T[][][] get3DArray(Class<T> clazz) {
-        T[][][] array = (T[][][]) Array.newInstance(clazz, getInt(), 0, 0);
+    public <T extends Cerealizable> T[][][] get3DArray(final Class<T> clazz) {
+        final T[][][] array = (T[][][]) Array.newInstance(clazz, getInt(), 0, 0);
         for (int i = 0; i < array.length; i++) {
             array[i] = (T[][]) Array.newInstance(clazz, getInt(), 0);
             for (int j = 0; j < array[i].length; j++) {
@@ -604,15 +609,40 @@ public class ByteArray implements Cerealizable {
     }
 
 
+    public <T> void add(final Cerealizer<T> cerealizer, final T obj) {
+        cerealizer.cerealizeTo(this, obj);
+    }
+
+    public <T> T get(final Cerealizer<T> cerealizer) {
+        return cerealizer.uncerealizeFrom(this);
+    }
+
+    public <T> void add(final Cerealizer<T> cerealizer, final T[] array) {
+        add(array.length);
+        for (int t = 0; t < array.length; t++) {
+            cerealizer.cerealizeTo(this, array[t]);
+        }
+    }
+
+    public <T> T[] getArray(final Cerealizer<T> cerealizer, final Class<T> clazz) {
+        final int length = getInt();
+        final T[] array = (T[]) Array.newInstance(clazz, length);
+        for (int i = 0; i < length; i++) {
+            array[i] = cerealizer.uncerealizeFrom(this);
+        }
+        return array;
+    }
+
+
     public byte[] getByteArray() {
-        int len = getInt();
+        final int len = getInt();
         if (len == -1) {
             return null;
         }
         if (len == 0) {
             return new byte[0];
         }
-        byte[] sb = remove(len);
+        final byte[] sb = remove(len);
         return sb;
     }
 
@@ -626,24 +656,24 @@ public class ByteArray implements Cerealizable {
         length = 0;
     }
 
-    public void reset(byte[] value) {
+    public void reset(final byte[] value) {
         reset();
         addRawBytes(value);
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Cerealizable> T uncerealize(Class<? extends Cerealizable> clazz) {
+    public <T extends Cerealizable> T uncerealize(final Class<? extends Cerealizable> clazz) {
         Cerealizable cerealizable = null;
         try {
             cerealizable = clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (final InstantiationException | IllegalAccessException e) {
             throw new IllegalArgumentException(e);
         }
         cerealizable.uncerealizeFrom(this);
         return (T) cerealizable;
     }
 
-    public static <T extends Cerealizable> T uncerealize(byte[] bytes, Class<? extends Cerealizable> clazz) {
+    public static <T extends Cerealizable> T uncerealize(final byte[] bytes, final Class<? extends Cerealizable> clazz) {
         return new ByteArray(bytes).uncerealize(clazz);
     }
 

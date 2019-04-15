@@ -402,6 +402,40 @@ class Application {
 ```
 
 
+## Using Cerealizer
+
+Sometimes, you can't implement (or don't want) a public empty constructor (because you want or need immutability or the object need a reference to an object available at runtime).
+
+For that, you can use a `Cerealizer` which is an object able to serealize and unserialize an object with a specific type. 
+
+Using a `Cerealizer` doen't require anymore to have a public constructor with no argument for the target type. You can use a `Cerealizer` instead of `Cerealizable` everywhere in this library (directly or by using the classe `CereralizableCerealizer`)
+
+Example:
+```java
+public final class User {
+    private final String username;
+    private final int age;
+    private final UserRepository repository; // This field can not be serialized and is available at runtime
+    
+    public User (String repository, String username, String age) {
+        this.repository =repository;
+        this.username = username;
+        this.age = age;
+    }
+}
+
+public final class UserCerealizer implements Cerealizer<User> {
+    void cerealizeTo(ByteArray ba, User obj) {
+        ba.add( obj.getUsername() );
+        ba.add( obj.getAge() );
+    }
+    
+    User uncerealizeFrom(ByteArray ba) {
+        UserRepository repository = getService(UserRepository.class);
+        return new User(repository, ba.getString(), ba.getInt());
+    }
+}
+``` 
 
 
 ## Using CerealFileSorter

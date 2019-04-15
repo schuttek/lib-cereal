@@ -1,5 +1,7 @@
 package com.wezr.lib.cereal;
 
+import com.wezr.lib.cereal.cerealizer.CerealizableCerealizer;
+import com.wezr.lib.cereal.cerealizer.Cerealizer;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.io.File;
@@ -32,12 +34,37 @@ import java.util.function.Predicate;
  */
 public class CerealFileSorter<T extends Cerealizable> {
 
-    private final Class<T> clazz;
+    private final Cerealizer<T> cerealizer;
     private final long blockSize;
     private final Path workspace;
     private final Comparator<T> comparator;
     private int fileCounter;
     private final Predicate<T> filter;
+
+    /**
+     * @param cerealizer The cerealizer for the type to read and write from the input/output files.
+     * @param blockSize  How much data to read into one chunk. Precisely, it is the minimum number of cerealized bytes to read from the file. Uncerealized objects may take up MUCH more memory that their cerealized versions.
+     * @param workspace  A preferrably empty directory in which to write temporary files
+     * @param comparator determines the sorting order of the objects
+     * @param filter     remove all objects that don't match this predicate
+     */
+    public CerealFileSorter(final Cerealizer<T> cerealizer, final long blockSize, final Path workspace, final Comparator<T> comparator, final Predicate<T> filter) {
+        this.cerealizer = cerealizer;
+        this.blockSize = blockSize;
+        this.workspace = workspace;
+        this.comparator = comparator;
+        this.filter = filter;
+    }
+
+    /**
+     * @param cerealizer The cerealizer of the type to read and write from the input/output files.
+     * @param blockSize  How much data to read into one chunk. Precisely, it is the minimum number of cerealized bytes to read from the file. Uncerealized objects may take up MUCH more memory that their cerealized versions.
+     * @param workspace  A preferrably empty directory in which to write temporary files
+     * @param comparator determines the sorting order of the objects
+     */
+    public CerealFileSorter(final Cerealizer<T> cerealizer, final long blockSize, final Path workspace, final Comparator<T> comparator) {
+        this(cerealizer, blockSize, workspace, comparator, t -> true);
+    }
 
     /**
      * @param clazz      the type to read and write from the input/output files.
@@ -47,11 +74,7 @@ public class CerealFileSorter<T extends Cerealizable> {
      * @param filter     remove all objects that don't match this predicate
      */
     public CerealFileSorter(final Class<T> clazz, final long blockSize, final Path workspace, final Comparator<T> comparator, final Predicate<T> filter) {
-        this.clazz = clazz;
-        this.blockSize = blockSize;
-        this.workspace = workspace;
-        this.comparator = comparator;
-        this.filter = filter;
+        this(new CerealizableCerealizer<>(clazz), blockSize, workspace, comparator, filter);
     }
 
     /**
@@ -61,12 +84,9 @@ public class CerealFileSorter<T extends Cerealizable> {
      * @param comparator determines the sorting order of the objects
      */
     public CerealFileSorter(final Class<T> clazz, final long blockSize, final Path workspace, final Comparator<T> comparator) {
-        this.clazz = clazz;
-        this.blockSize = blockSize;
-        this.workspace = workspace;
-        this.comparator = comparator;
-        this.filter = t -> true;
+        this(clazz, blockSize, workspace, comparator, t -> true);
     }
+
 
     /**
      * Sort objects from the input file and write them, in order, to output file.
@@ -113,7 +133,7 @@ public class CerealFileSorter<T extends Cerealizable> {
                     try (CerealOutputStream cerealOutputStream =
                                  new CerealOutputStream(new FileOutputStream(tempFile))) {
                         for (T cereal : block) {
-                            cerealOutputStream.write(cereal);
+                            cerealOutputStream.write(cerealizer, cereal);
                         }
                     }
                 }
@@ -131,9 +151,9 @@ public class CerealFileSorter<T extends Cerealizable> {
                 if (first == null) {
                     break;
                 }
-                output.write(first.getKey());
+                output.write(cerealizer, first.getKey());
 
-                final Optional<T> readOpt = first.getValue().read(clazz);
+                final Optional<T> readOpt = first.getValue().read(cerealizer);
                 readOpt.ifPresent(t -> queue.add(new ImmutablePair<>(t, first.getValue())));
             }
         } finally {
@@ -174,7 +194,7 @@ public class CerealFileSorter<T extends Cerealizable> {
         PriorityQueue<ImmutablePair<T, CerealInputStream>> queue = new PriorityQueue<>(
                 (o1, o2) -> comparator.compare(o1.getKey(), o2.getKey()));
         for (CerealInputStream cerealInputStream : tempFiles) {
-            final Optional<T> read = cerealInputStream.read(clazz);
+            final Optional<T> read = cerealInputStream.read(cerealizer);
             read.ifPresent(t -> queue.add(new ImmutablePair<>(t, cerealInputStream)));
         }
         return queue;
@@ -190,7 +210,7 @@ public class CerealFileSorter<T extends Cerealizable> {
         long startPosition = cerealInputStream.position();
         long readSize = 0;
         do {
-            readOpt = cerealInputStream.read(clazz);
+            readOpt = cerealInputStream.read(cerealizer);
             if (readOpt.isPresent() && filter.test(readOpt.get())) {
                 block.add(readOpt.get());
                 readSize = cerealInputStream.position() - startPosition;
