@@ -114,13 +114,13 @@ public class ByteArrayTest {
     private boolean loadUnloadShort(short d) {
         ByteArray ba = new ByteArray();
         ba.add(d);
-        return (d == ba.getShort()) ? true : false;
+        return d == ba.getShort();
     }
 
     @Test
     public void shortTest() {
         for (int t = 0; t < randIterations; t++) {
-            assertTrue(loadUnloadShort(new Integer(rand.nextInt()).shortValue()));
+            assertTrue(loadUnloadShort(Integer.valueOf(rand.nextInt()).shortValue()));
         }
         assertTrue(loadUnloadShort((short) 1));
         assertTrue(loadUnloadShort((short) 0));
