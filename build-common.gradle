@@ -1,0 +1,109 @@
+repositories {
+    maven {
+        url System.getenv('NEXUS_URL') ?: ("file:" + System.getenv("HOME") + "/.m2/repository")
+        if (!url.getScheme().equals("file")) {
+            credentials {
+                username System.getenv('NEXUS_USER')
+                password System.getenv('NEXUS_PASSWORD')
+            }
+        }
+    }
+    mavenCentral()
+}
+
+if (buildConfig == null) {
+    throw new IllegalArgumentException("this build script needs an ext.buildConfig");
+}
+
+apply plugin: 'java'
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
+
+
+// enforce JDK 16
+project.sourceCompatibility = 16
+project.targetCompatibility = 16
+
+// enforce gradle wrapper 7.1.1
+project.tasks.wrapper {
+    it.gradleVersion = "7.1.1"
+    it.distributionType = Wrapper.DistributionType.ALL
+}
+
+
+project.version = buildConfig.versionMajor + "." + buildConfig.versionMinor + "." + buildConfig.versionBuild;
+
+for (final Task classTask : project.getTasksByName("classes", false))
+    classTask.doFirst {
+        final File file = new File(project.buildDir.getPath() + "/resources/main/version/" + buildConfig.name)
+        if (!file.getAbsoluteFile().getParentFile().exists() && !file.getAbsoluteFile().getParentFile().mkdirs()) {
+            throw new FileNotFoundException("Couldn't create path: " + file.getAbsoluteFile().getParentFile().toString())
+        }
+
+        println "Generating version [" + project.version + "] file: " + file.getAbsoluteFile().getCanonicalPath()
+
+        file.withOutputStream { outputStream ->
+            outputStream.write(((String) project.getVersion()).getBytes("UTF-8"))
+        }
+    }
+
+// build a sources and javadocs jar...
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+
+// create executable Jar's for app's, webapps and tools...
+if (buildConfig.get("name").toString().startsWith("app")
+        || buildConfig.get("name").toString().startsWith("webapp")
+        || buildConfig.get("name").toString().startsWith("tool")) {
+    mainClassName = buildConfig.mainAppClass;
+
+    project.tasks.jar {
+        it.doFirst {
+            it.manifest {
+                if (!project.configurations.compile.isEmpty()) {
+                    it.attributes(
+                            'Class-Path': project.configurations.compile.collect { it.getName() }.join(' '),
+                            'Main-Class': wezrConfiguration.mainAppClass)
+                }
+            }
+        }
+    }
+
+    // Copy dependency jars options
+    def copyDependencies = false
+    if (project.hasProperty("copyDependencies")) {
+        copyDependencies = project.property("copyDependencies").toString() == "true"
+    }
+    if (copyDependencies) {
+        println("\tCopy dependencies jars")
+        def final copyTask = project.tasks.create("copyTask", Copy.class) {
+            into project.buildDir.toString() + "/libs"
+            from project.configurations.runtime
+        }
+        copyTask.doFirst {
+            println("Copying dependencies jars to: " + project.buildDir.toString() + "/libs")
+        }
+
+        project.tasks.getByName("assemble").dependsOn copyTask
+    }
+
+    // Shadow JAR
+    def skipShadow = false;
+    if (project.hasProperty("skipShadow")) {
+        skipShadow = project.property("skipShadow").toString() == "true"
+    }
+    if (!skipShadow) {
+        project.apply plugin: 'com.github.johnrengelman.shadow'
+
+        project.tasks.shadowJar {
+            it.baseName = wezrConfiguration.name
+            it.classifier = "standalone"
+        }
+    } else {
+        println "\tSKIPPING Shadow Jar artifact..."
+    }
+}
+

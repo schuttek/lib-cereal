@@ -1,25 +1,11 @@
-buildscript {
-    repositories {
-        maven {
-            url System.getenv('NEXUS_URL') ?: ("file:" + System.getenv("HOME") + "/.m2/repository")
-            if (!url.getScheme().equals("file")) {
-                credentials {
-                    username System.getenv('NEXUS_USER')
-                    password System.getenv('NEXUS_PASSWORD')
-                }
-            }
-        }
-        dependencies {
-            classpath group: 'com.wezr', name: 'plugin-gradle-build', version: '1.2.0'
-        }
-        mavenCentral()
-    }
-}
+ext.buildConfig = [
+        name        : 'lib-cereal',
+        versionMajor: 1,
+        versionMinor: 0,
+        versionBuild: 0
+]
 
-apply plugin: 'com.wezr.plugin.gradle.build'
-apply plugin: 'maven-publish'
-
-/* Build settings */
+apply from: 'build-common.gradle'
 
 dependencies {
     implementation 'org.apache.commons:commons-lang3:3.12.0'
@@ -32,9 +18,5 @@ dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter')
 }
 
-ext.wezrConfiguration = [
-        name        : 'lib-cereal',
-        versionMajor: 1,
-        versionMinor: 0,
-        versionBuild: 0
-]
+
+
