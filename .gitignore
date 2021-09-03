@@ -11,3 +11,4 @@ rest-demo*.log
 .factorypath
 /.apt_generated/
 out/
+/.idea/

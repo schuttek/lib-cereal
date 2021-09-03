@@ -30,6 +30,40 @@ project.tasks.wrapper {
     it.distributionType = Wrapper.DistributionType.ALL
 }
 
+project.tasks.test {
+    it.useJUnitPlatform()
+}
+/* Make sure gradle display all info about tests */
+project.allprojects {
+    tasks.withType(Test) {
+        it.testLogging {
+            it.exceptionFormat "full"
+            it.showCauses true
+            it.showExceptions true
+            it.showStackTraces true
+            it.showStandardStreams
+            it.events = [
+                    "passed",
+                    "skipped",
+                    "failed",
+                    "standardError"
+            ]
+        }
+    }
+}
+
+def nexusUrl = System.getenv("NEXUS_URL")
+if (nexusUrl == null) {
+    nexusUrl = "file://" + System.getProperty("user.home") + "/.m2/repository/"
+    println "WARN: Undefined environment variable NEXUS_URL. Using default: " + nexusUrl
+}
+def nexusUser = System.getenv("NEXUS_USER")
+def nexusPassword = System.getenv("NEXUS_PASSWORD")
+def nexusGroupId = System.getenv("NEXUS_GROUP_ID")
+if (nexusGroupId == null) {
+    nexusGroupId = "com.wezr"
+    println "WARN: Undefined environment variable NEXUS_GROUP_ID. Using default: " + nexusGroupId
+}
 
 project.version = buildConfig.versionMajor + "." + buildConfig.versionMinor + "." + buildConfig.versionBuild;
 
@@ -107,3 +141,33 @@ if (buildConfig.get("name").toString().startsWith("app")
     }
 }
 
+
+project.publishing {
+    it.publications {
+        main(MavenPublication) {
+
+            if (buildConfig.type == "webapp" | buildConfig.type == "app" || buildConfig.type == "tool") {
+                def skipShadow = false;
+                if (project.hasProperty("skipShadow")) {
+                    skipShadow = project.property("skipShadow").toString() == "true"
+                }
+                if (!skipShadow) {
+                    it.artifact project.tasks.shadowJar
+                }
+            }
+
+            it.groupId = nexusGroupId
+            artifactId = buildConfig.name
+            from components.java
+        }
+    }
+    it.repositories.maven {
+        it.url nexusUrl
+        if (!it.url.getScheme().equals("file")) {
+            it.credentials {
+                it.username nexusUser
+                it.password nexusPassword
+            }
+        }
+    }
+}
