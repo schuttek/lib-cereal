@@ -1,7 +1,12 @@
 package com.wezr.lib.cereal;
 
 import com.wezr.lib.cereal.cerealizer.Cerealizer;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import org.apache.commons.io.IOUtils;
 
+import javax.naming.SizeLimitExceededException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -13,37 +18,31 @@ import java.nio.charset.CodingErrorAction;
 import java.util.UUID;
 
 /**
- * This class essentially works like java.io.ByteBuffer. You can add data to the
- * front and back of the ByteArray, and remove bytes from the front. The main
- * difference is that it's a bit faster on many successive add() operations than
- * ByteBuffer's putType() methods, since new chunks are added as a list, and
- * therefore always O(1).
+ * This class is essentially a wrapper for an array of bytes, and the core tool of Cereal.
+ * <p>
+ * You can add data to the
+ * front and back of the ByteArray, and remove bytes from the front. It is very fast on many successive add() operations
+ * since new chunks are added as a list, and therefore always O(1).
  * <p>
  * A common use case is to pack a set of mixed raw values (say, an int, a String
  * and a double) into a byte array, then unpack them later.
  * <p>
- * This class never actually changes the contents of byte arrays passed to it,
+ * This class never changes the contents of byte arrays passed to it,
  * so there's no need to copy arrays before passing them to these methods.
  * <p>
  * You can only ever remove bytes from the front of a ByteArray, by using the
- * get{Type}() methods. ByteArray cannot be rewound. the coalesce method may
+ * get{Type}() methods. ByteArray cannot be rewound, since the coalesce() method may
  * free memory at the beginning of the ByteArray as it's being read from, so
  * it's safe to use this as a backing to a messaging queue between two threads
  * for example.
  * <p>
  * This class is NOT threadsafe, so make sure you use external synchronization.
- * <p>
- * WARNING: DO NOT CONFUSE THIS WITH StringBuffer! Adding Strings to this object
- * in sequence does NOT concatenate Strings, but stores them as separate
- * strings! byteArray.add("hello, "); byteArray.add("World!") will NOT become
- * "hello, World!".
  *
- * @author kai
+ * @author schuttek@gmail.com
  */
 
 public class ByteArray implements Cerealizable {
-
-
+    private static final int DEFAULT_BUFFER_SIZE = 8192;
     private int length = 0;
     private Chunk front = null;
     private Chunk back = null;
@@ -203,7 +202,7 @@ public class ByteArray implements Cerealizable {
     }
 
     /**
-     * Compacts the internal storage data structures to it's minimal format.
+     * Compacts the internal storage data structures to its minimal format.
      * <p>
      * Every add() operation can increase the numbers of small data buffers and
      * internal pointers.
@@ -211,7 +210,7 @@ public class ByteArray implements Cerealizable {
      * This method realigns the internal data structure into a single byte
      * array.
      * <p>
-     * max runtime is O(this.length)
+     * max runtime is O(this.length), and the runtime for a ByteArray that is already coalesced is 1.
      */
     public void coalesce() {
         if (front == null || front.next == null) {
@@ -646,19 +645,121 @@ public class ByteArray implements Cerealizable {
         return sb;
     }
 
+    /**
+     * Removes all the bytes of this ByteArray and returns them. This ByteArray will be empty.
+     */
     public byte[] getAllBytes() {
         return remove(length());
     }
 
+    /**
+     * Creates a copy of the coalesced internal data array, This ByteArray will not change.
+     */
+    public byte[] copyAllBytes() {
+        coalesce();
+        byte[] copy = new byte[front.array.length];
+        System.arraycopy(front.array, 0, copy, 0, front.array.length);
+        return copy;
+    }
+
+    /**
+     * resets this ByteArray to contain nothing.
+     */
     public void reset() {
         front = null;
         back = null;
         length = 0;
     }
 
+    /**
+     * resets this ByteArray to contain the given array.
+     *
+     * @param value
+     */
     public void reset(final byte[] value) {
         reset();
         addRawBytes(value);
+    }
+
+    /**
+     * Read all bytes from the input stream until it closes. When reading from potentially untrusted sources, use the version with maxLength instead to prevent OutOfMemoryErrors.
+     *
+     * @param inputStream the inputStream to read from
+     * @return the ByteArray containing all of the InputStream's bytes.
+     */
+    public static ByteArray fromInputStream(InputStream inputStream) throws IOException {
+        ByteArray ba = null;
+        try {
+            ba = fromInputStream(inputStream, -1);
+        } catch (SizeLimitExceededException e) {
+            // can't happen, see that method.
+        }
+        return ba;
+    }
+
+    /**
+     * Read up to maxLength number of bytes (to prevent OutOfMemoryErrors when reading from untrusted network connections) or until the end of the inputStream
+     *
+     * @param inputStream the inputStream to read from
+     * @param maxLength   the max number of bytes to read from inputStream into memory.
+     * @return the ByteArray containing all of the InputStream's bytes.
+     * @throws SizeLimitExceededException if maxLength of read bytes has been reached before reaching the end of the inputStream.
+     */
+    public static ByteArray fromInputStream(InputStream inputStream, int maxLength) throws SizeLimitExceededException, IOException {
+        return fromInputStream(inputStream, maxLength, DEFAULT_BUFFER_SIZE);
+    }
+
+    /**
+     * Read up to maxLength number of bytes (to prevent OutOfMemoryErrors when reading from untrusted network connections) or until the end of the inputStream. This method blocks on blocking input streams.
+     *
+     * @param inputStream the inputStream to read from
+     * @param maxLength   the max number of bytes to read from inputStream into memory. This is an int not a long because java doesn't handle single byte arrays larger than 2GB, and neither can this class.
+     * @param bufferSize  the size of the copy buffer. Optimal copy buffer sizes are very architecture dependant and application dependant. The default (8192) is probably fine. a negative number means an infinite buffer size.
+     * @return the ByteArray containing all of the InputStream's bytes.
+     * @throws SizeLimitExceededException if maxLength of read bytes has been reached before reaching the end of the inputStream.
+     */
+    public static ByteArray fromInputStream(InputStream inputStream, int maxLength, int bufferSize) throws SizeLimitExceededException, IOException {
+        // sanity checks
+        if (inputStream == null) {
+            throw new NullPointerException("Argument inputstream cannot be null");
+        }
+        if (maxLength == 0) {
+            throw new IllegalArgumentException("maxLength cannot be 0");
+        }
+        if (bufferSize > maxLength) {
+            bufferSize = maxLength;
+        }
+        if (bufferSize <= 0) {
+            throw new IllegalArgumentException("bufferSize cannot be less than 1");
+        }
+
+
+        // buffer allocations
+        byte[] readBuffer = new byte[bufferSize];
+        ByteArray byteArray = new ByteArray();
+
+        // read from input stream blocking loop
+        int totalBytesRead = 0;
+        while (true) {
+            int read = inputStream.read(readBuffer, 0, bufferSize);
+            // reached EOF
+            if (read == -1) {
+                break;
+            } else {
+                // add read bytes to ByteArray
+                byteArray.addRawBytes(readBuffer, 0, read);
+                // addRawBytes doesn't copy bytes, so we must create a new buffer to read into on the next round.
+                readBuffer = new byte[bufferSize];
+                // remember the total number of bytes read..
+                totalBytesRead += read;
+            }
+            // totalBytesRead < 0 is an integer rollover protection...
+            // FIXME test this: if maxLength is MAX_INTEGER and bufferSize is >1
+            if (totalBytesRead >= maxLength || totalBytesRead < 0)  {
+                throw new SizeLimitExceededException();
+             }
+        }
+        return byteArray;
     }
 
     @SuppressWarnings("unchecked")
@@ -688,7 +789,7 @@ public class ByteArray implements Cerealizable {
         this.reset(ba.getByteArray());
     }
 
-    private class Chunk {
+    private static class Chunk {
         byte[] array = null;
         int startIdx;
         int length;
