@@ -4,6 +4,7 @@
 bin/
 .gradle
 build/
+target/
 .springBeans
 jmeter.log
 rest-demo*.log

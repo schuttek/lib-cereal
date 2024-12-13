@@ -70,27 +70,27 @@ Let's create a new Model Object for a Tree:
         private String speciesName;
     }
 ```    
- A class needs to implement the Cerealizable interface, which requires the implementation of to methods: one to cerealize the Object, the other to deceralize it. 
- 
+ A class needs to implement the Cerealizable interface, which requires the implementation of to methods: one to cerealize the Object, the other to deceralize it.
+
 ```java
-    import com.wezr.lib.cereal.Cerealizable;
-    
-	public class Tree {
-        private float height;
-        private int leafCount;
-        private String speciesName;
-    	
-        @Override
-        public void cerealizeTo(final ByteArray ba) {
-        
-        }
 
-        @Override
-        public void uncerealizeFrom(final ByteArray ba) {
 
-        }
-    	
+public class Tree {
+    private float height;
+    private int leafCount;
+    private String speciesName;
+
+    @Override
+    public void cerealizeTo(final ByteArray ba) {
+
     }
+
+    @Override
+    public void uncerealizeFrom(final ByteArray ba) {
+
+    }
+
+}
 ```
  
  
