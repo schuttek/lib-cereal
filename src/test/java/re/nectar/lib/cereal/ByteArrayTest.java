@@ -5,6 +5,9 @@ import re.nectar.lib.cereal.cerealizer.StringCerealizer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -580,4 +583,55 @@ public class ByteArrayTest {
 
         assertArrayEquals(expected.getAllBytes(), test.getAllBytes());
     }
+
+
+    @Test
+    @DisplayName("byte array is empty after getAllBytes()")
+    void ba_empty_after_getAllBytes_test() {
+        Forecast randomForecast = new ConverterTest().getRandomForecast(true);
+        ByteArray original = ByteArray.cerealize(randomForecast);
+        original.getAllBytes();
+        assertEquals(0, original.length());
+    }
+
+    @Test
+    @DisplayName("byte array remains the same after copyAllBytes()")
+    void ba_same_after_copyAllBytes_test() {
+        Forecast randomForecast = new ConverterTest().getRandomForecast(true);
+        ByteArray original = ByteArray.cerealize(randomForecast);
+        int originalLength = original.length();
+        byte[] copyBytes = original.copyAllBytes();
+        assertEquals(originalLength, original.length());
+    }
+
+    @Test
+    @DisplayName("copy all bytes and get all bytes results are equal")
+    void copy_all_bytes_and_get_all_bytes_results_are_equal() {
+        Forecast randomForecast = new ConverterTest().getRandomForecast(true);
+        ByteArray original = ByteArray.cerealize(randomForecast);
+        byte[] copyBytes = original.copyAllBytes();
+        byte[] getAllBytes = original.getAllBytes();
+        assertArrayEquals(copyBytes, getAllBytes);
+    }
+
+
+    @Test
+    @DisplayName("read from input stream")
+    void read_from_input_stream() throws IOException {
+        Forecast randomForecast = new ConverterTest().getRandomForecast(true);
+        ByteArray original = ByteArray.cerealize(randomForecast);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        baos.writeBytes(original.getAllBytes());
+        byte[] buffer = baos.toByteArray();
+        ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
+
+        ByteArray byteArray = ByteArray.fromInputStream(bais);
+        Forecast test = byteArray.uncerealize(Forecast.class);
+
+        assertEquals(randomForecast, test);
+
+
+    }
+
 }

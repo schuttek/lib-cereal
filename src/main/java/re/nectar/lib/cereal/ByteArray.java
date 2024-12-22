@@ -83,9 +83,9 @@ public class ByteArray implements Cerealizable {
 
     public static short bytesToShort(final byte[] array, final int offset) {
         short n = 0;
-        n ^= array[offset] & 0xFF;
+        n ^= (short) (array[offset] & 0xFF);
         n <<= 8;
-        n ^= array[offset + 1] & 0xFF;
+        n ^= (short) (array[offset + 1] & 0xFF);
         return n;
     }
 
@@ -718,7 +718,7 @@ public class ByteArray implements Cerealizable {
     public static ByteArray fromInputStream(InputStream inputStream) throws IOException {
         ByteArray ba = null;
         try {
-            ba = fromInputStream(inputStream, -1);
+            ba = fromInputStream(inputStream, -1, DEFAULT_BUFFER_SIZE);
         } catch (SizeLimitExceededException e) {
             // can't happen, see that method.
         }
@@ -749,12 +749,12 @@ public class ByteArray implements Cerealizable {
     public static ByteArray fromInputStream(InputStream inputStream, int maxLength, int bufferSize) throws SizeLimitExceededException, IOException {
         // sanity checks
         if (inputStream == null) {
-            throw new NullPointerException("Argument inputstream cannot be null");
+            throw new NullPointerException("inputStream cannot be null");
         }
         if (maxLength == 0) {
             throw new IllegalArgumentException("maxLength cannot be 0");
         }
-        if (bufferSize > maxLength) {
+        if (maxLength > 0 && bufferSize > maxLength) {
             bufferSize = maxLength;
         }
         if (bufferSize <= 0) {
@@ -782,8 +782,7 @@ public class ByteArray implements Cerealizable {
                 totalBytesRead += read;
             }
             // totalBytesRead < 0 is an integer rollover protection...
-            // FIXME test this: if maxLength is MAX_INTEGER and bufferSize is >1
-            if (totalBytesRead >= maxLength || totalBytesRead < 0)  {
+            if (maxLength >= 0 && (totalBytesRead >= maxLength || totalBytesRead < 0))  {
                 throw new SizeLimitExceededException();
              }
         }
