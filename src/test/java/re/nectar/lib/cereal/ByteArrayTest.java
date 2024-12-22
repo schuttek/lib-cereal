@@ -205,10 +205,6 @@ public class ByteArrayTest {
     public void localeTest() {
         assertEquals(Charset.defaultCharset().toString(), StandardCharsets.UTF_8.toString());
         assertEquals(Charset.defaultCharset(), StandardCharsets.UTF_8);
-
-        System.err.println(
-                "בארץ בצורך לבצע מהפכה בנבחרת, ניקוי אורוות בדומה לזה שעשתה מכבי תל אביב. איגוד הכדורסל הגיע למסקנה דומה. \"כשהיורובאסקט נגמר, קיבלנו החלטה להצעיר את הנבחרת ולבנות אותה לארבע השנים הבאות\", מספר יו\"ר הוועדה המקצועית עמוס פרישמן. השינוי הראשון נעשה בצוות המקצועי. המאמן ארז אדלשטיין נפרד אחרי ארבע שנים, ובמקומו מונה עודד קטש שצעיר ממנו ב־13 שנה. המהלך הראשון שעשה המאמן החדש");
-        System.err.println("If the above looks like Hebrew, then you're in UTF-8");
     }
 
     @Test
@@ -465,5 +461,121 @@ public class ByteArrayTest {
         final ByteArray ba2 = new ByteArray(ba);
         final String[] array = ba2.getArray(new StringCerealizer(), String.class);
         assertArrayEquals(new String[]{"Ss1", "Ss2", "Ss3"}, array);
+    }
+
+    @Test
+    @DisplayName("ByteArray is empty after reset")
+    void reset_array() {
+        final ByteArray ba = new ByteArray();
+        assertEquals(0, ba.length());
+        ba.add(29378);
+        ba.add(9237);
+        assertEquals(8, ba.length());
+        ba.reset();
+        assertEquals(0, ba.length());
+    }
+
+    @Test
+    @DisplayName("Constructor with ByteBuffer")
+    void constructor_with_ByteBuffer() {
+        byte[] bytes = RandUtils.nextByteArray(50);
+        ByteArray ba = new ByteArray(ByteBuffer.wrap(bytes));
+        assertArrayEquals(bytes, ba.getAllBytes());
+    }
+
+    @Test
+    @DisplayName("Constructor with ByteBuffer respects the ByteBuffer position")
+    void constructor_with_ByteBuffer_position() {
+        byte[] bytes = RandUtils.nextByteArray(50);
+
+        byte[] last30Bytes = new byte[30];
+        System.arraycopy(bytes, 20, last30Bytes, 0, 30);
+
+        ByteBuffer bb = ByteBuffer.wrap(bytes);
+        bb.position(20);
+        assertEquals(30, bb.remaining());
+
+        ByteArray ba = new ByteArray(bb);
+        bb.position(20);
+
+        assertEquals(30, ba.length());
+        assertEquals(30, bb.remaining());
+        byte[] wyf = new byte[30];
+        bb.get(wyf);
+        bb.position(20);
+
+        assertArrayEquals(last30Bytes, wyf);
+        byte[] allBytes = ba.getAllBytes();
+
+        assertArrayEquals(last30Bytes, allBytes);
+
+    }
+
+    @Test
+    @DisplayName("wrap with ByteBuffer")
+    void wrap_with_ByteBuffer() {
+        byte[] bytes = RandUtils.nextByteArray(50);
+        ByteArray ba = ByteArray.wrap(ByteBuffer.wrap(bytes));
+        assertArrayEquals(bytes, ba.getAllBytes());
+    }
+
+    @Test
+    @DisplayName("wrap with byte array")
+    void wrap_with_byte_array() {
+        byte[] bytes = RandUtils.nextByteArray(50);
+        ByteArray ba = ByteArray.wrap(bytes);
+        assertArrayEquals(bytes, ba.getAllBytes());
+    }
+
+    @Test
+    @DisplayName("add integer to front test")
+    void add_integer_to_front_test() {
+        byte[] bytes = RandUtils.nextByteArray(50);
+        ByteArray ba = ByteArray.wrap(bytes);
+
+        ByteArray expected = new ByteArray();
+        int randInt = RandUtils.nextInt();
+        expected.add(randInt);
+        expected.addRawBytes(bytes);
+
+        ba.addToFront(randInt);
+        assertArrayEquals(expected.getAllBytes(), ba.getAllBytes());
+    }
+
+
+
+    @Test
+    @DisplayName("add byte array to front test")
+    void add_byte_array_to_front_test() {
+        byte[] bytes1 = RandUtils.nextByteArray(50);
+        byte[] bytes2 = RandUtils.nextByteArray(20);
+
+        ByteArray test = new ByteArray();
+        test.addByteArray(bytes2);
+        test.addByteArrayToFront(bytes1);
+
+        ByteArray expected = new ByteArray();
+        expected.addByteArray(bytes1);
+        expected.addByteArray(bytes2);
+
+        assertArrayEquals(expected.getAllBytes(), test.getAllBytes());
+    }
+
+
+    @Test
+    @DisplayName("add string to front test")
+    void add_string_to_front_test() {
+        byte[] bytes1 = RandUtils.nextByteArray(50);
+        String s = RandUtils.nextUTF8String(10, 20);
+
+        ByteArray test = new ByteArray();
+        test.addByteArray(bytes1);
+        test.addToFront(s);
+
+        ByteArray expected = new ByteArray();
+        expected.add(s);
+        expected.addByteArray(bytes1);
+
+        assertArrayEquals(expected.getAllBytes(), test.getAllBytes());
     }
 }

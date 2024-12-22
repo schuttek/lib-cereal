@@ -154,11 +154,41 @@ public class ByteArray implements Cerealizable {
         return Float.intBitsToFloat(bytesToInt(array, offset));
     }
 
+
+    /**
+     * Cerealizes an object to a byte array
+     */
+    public static byte[] cerealToByteArray(final Cerealizable cerealizable) {
+        return cerealize(cerealizable).getAllBytes();
+    }
+
+    /**
+     * Cerealizes an object to a ByteBuffer
+     */
+    public static ByteBuffer cerealToByteBuffer(final Cerealizable cerealizable) {
+        return ByteBuffer.wrap(cerealToByteArray(cerealizable));
+    }
+
+    /**
+     * Cerealizes an object to a ByteArray
+     */
     public static ByteArray cerealize(final Cerealizable cerealizable) {
         final ByteArray ba = new ByteArray();
         cerealizable.cerealizeTo(ba);
         return ba;
     }
+
+
+    public static <T extends Cerealizable> T uncerealize(final byte[] bytes, final Class<? extends Cerealizable> clazz) {
+        return new ByteArray(bytes).uncerealize(clazz);
+    }
+
+    public static <T extends Cerealizable> T uncerealize(final ByteBuffer bytebuffer, final Class<? extends Cerealizable> clazz) {
+        return new ByteArray(bytebuffer).uncerealize(clazz);
+    }
+
+
+
 
     private Chunk makeChunk(final byte[] b, final int fromIdx, final int length) {
         if (fromIdx + length > b.length) {
@@ -203,7 +233,7 @@ public class ByteArray implements Cerealizable {
     }
 
     /**
-     * Compacts the internal storage data structures to it's minimal format.
+     * Compacts the internal storage data structures to its minimal format.
      * <p>
      * Every add() operation can increase the numbers of small data buffers and
      * internal pointers.
@@ -671,10 +701,6 @@ public class ByteArray implements Cerealizable {
         }
         cerealizable.uncerealizeFrom(this);
         return (T) cerealizable;
-    }
-
-    public static <T extends Cerealizable> T uncerealize(final byte[] bytes, final Class<? extends Cerealizable> clazz) {
-        return new ByteArray(bytes).uncerealize(clazz);
     }
 
     @Override

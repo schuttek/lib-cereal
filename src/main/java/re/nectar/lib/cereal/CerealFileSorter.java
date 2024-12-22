@@ -150,16 +150,18 @@ public class CerealFileSorter<T extends Cerealizable> {
                 if (first == null) {
                     break;
                 }
-                output.write(cerealizer, first.getKey());
+                output.write(cerealizer, first.key());
 
-                final Optional<T> readOpt = first.getValue().read(cerealizer);
-                readOpt.ifPresent(t -> queue.add(new Pair<>(t, first.getValue())));
+                final Optional<T> readOpt = first.value().read(cerealizer);
+                readOpt.ifPresent(t -> queue.add(new Pair<>(t, first.value())));
             }
         } finally {
             closeTempFiles(tempCerealInputStreams);
             deleteTempFiles(tempFiles);
         }
     }
+
+    private record Pair<K, V>(K key, V value) {};
 
     private void deleteTempFiles(final List<File> tempFiles) {
         for (File file : tempFiles) {
@@ -191,7 +193,7 @@ public class CerealFileSorter<T extends Cerealizable> {
 
     private PriorityQueue<Pair<T, CerealInputStream>> buildPriorityQueues(final List<CerealInputStream> tempFiles) throws IllegalAccessException, IOException, InstantiationException {
         PriorityQueue<Pair<T, CerealInputStream>> queue = new PriorityQueue<>(
-                (o1, o2) -> comparator.compare(o1.getKey(), o2.getKey()));
+                (o1, o2) -> comparator.compare(o1.key(), o2.key()));
         for (CerealInputStream cerealInputStream : tempFiles) {
             final Optional<T> read = cerealInputStream.read(cerealizer);
             read.ifPresent(t -> queue.add(new Pair<>(t, cerealInputStream)));
