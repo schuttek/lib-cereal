@@ -198,6 +198,8 @@ public class ByteArrayTest {
             // Log.trace("original: "+s.length());
             // Log.trace("test: "+testString.length());
             assertEquals(s, testString);
+            // if your tests fail on this line, it's because your JVM isn't running with a UTF-8 character set by default.
+            // Cereal should only ever be used with UTF-8, and it is not compatible with other character sets.
         }
     }
 
