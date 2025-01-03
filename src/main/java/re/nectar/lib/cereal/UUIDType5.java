@@ -7,6 +7,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * @deprecated use java.util.UUID instead
+ */
+@Deprecated
 public class UUIDType5 {
     private static final Charset UTF8 = Charset.forName("UTF-8");
     public static final UUID NAMESPACE_DNS = UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
