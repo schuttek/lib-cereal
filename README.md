@@ -73,7 +73,7 @@ Let's create a new Model Object for a Tree:
  A class needs to implement the Cerealizable interface, which requires the implementation of to methods: one to cerealize the Object, the other to deceralize it. 
  
 ```java
-    import com.wezr.lib.cereal.Cerealizable;
+    import re.nectar.lib.cereal.Cerealizable;
     
 	public class Tree {
         private float height;
